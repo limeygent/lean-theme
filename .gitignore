@@ -1,0 +1,15 @@
+# Ignore archive folder
+/archive/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# WordPress
+wp-config.php
