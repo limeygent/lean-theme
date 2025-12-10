@@ -10,7 +10,7 @@
 // CORE FUNCTIONALITY
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Custom Post Types (FAQ, Testimonials, Locations, Jobs)
+// Custom Post Types (Testimonials)
 require_once get_template_directory() . '/inc/cpts.php';
 
 // SEO: Meta box, admin columns, frontend output
@@ -25,9 +25,6 @@ require_once get_template_directory() . '/inc/settings.php';
 // Custom XML sitemaps
 require_once get_template_directory() . '/inc/sitemaps.php';
 
-// Location CPT rewrite rules (city pages, service pages)
-require_once get_template_directory() . '/inc/locations.php';
-
 // Disable features (feeds, search)
 require_once get_template_directory() . '/inc/disable-features.php';
 
@@ -40,15 +37,6 @@ require_once get_template_directory() . '/inc/shortcodes/blog.php';
 
 // [testimonials] - Display testimonials with Schema.org markup
 require_once get_template_directory() . '/inc/shortcodes/testimonials.php';
-
-// [faq_list] - Display FAQs using <details> elements
-require_once get_template_directory() . '/inc/shortcodes/faqs.php';
-
-// [display_jobs] - Display job portfolio cards
-require_once get_template_directory() . '/inc/shortcodes/jobs.php';
-
-// [job_submit_form] - Frontend job submission form for techs
-require_once get_template_directory() . '/inc/shortcodes/job-submit.php';
 
 // [map_embed] - Google Maps embed with GMB overlay
 require_once get_template_directory() . '/inc/shortcodes/maps.php';

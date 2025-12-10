@@ -85,13 +85,8 @@ function pageone_output_seo_meta_tags() {
 		$meta_description = wp_trim_words(wp_strip_all_tags($post->post_content), 30, '...');
 	}
 
-	// Canonical URL - check if this is a city landing page
-	if (get_query_var('city_landing') && is_singular('locations')) {
-		$slug = get_post_field('post_name', $post->ID);
-		$canonical_url = home_url('/' . $slug . '/');
-	} else {
-		$canonical_url = get_permalink($post->ID);
-	}
+	// Canonical URL
+	$canonical_url = get_permalink($post->ID);
 
 	$modified_time = get_the_modified_time('c', $post->ID);
 
@@ -199,9 +194,9 @@ function pageone_add_meta_seo_fields( $post ) {
     <?php
 }
 
-// Define the post types here, including CPTs
+// Define the post types here
 function pageone_seo_post_types() {
-    return ['post','page','locations']; 
+    return ['post','page'];
 }
 
 function pageone_register_meta_box() {
@@ -272,8 +267,7 @@ function pageone_add_seo_columns( $cols ) {
     return $new;
 }
 add_filter('manage_post_posts_columns', 'pageone_add_seo_columns');          // blog posts
-add_filter('manage_pages_columns',      'pageone_add_seo_columns');          // pages (this one is special)
-add_filter('manage_locations_posts_columns', 'pageone_add_seo_columns'); // CPT
+add_filter('manage_pages_columns',      'pageone_add_seo_columns');          // pages
 
 function pageone_populate_seo_columns( $column, $post_id ) {
     switch ( $column ) {
@@ -306,7 +300,6 @@ function pageone_populate_seo_columns( $column, $post_id ) {
 }
 add_action( 'manage_post_posts_custom_column', 'pageone_populate_seo_columns', 10, 2);
 add_action( 'manage_pages_custom_column', 'pageone_populate_seo_columns', 10, 2 );
-add_action( 'manage_locations_posts_custom_column', 'pageone_populate_seo_columns', 10, 2 );
 
 function pageone_make_seo_columns_sortable( $cols ) {
     $cols['seo_title']       = 'seo_title';
@@ -317,7 +310,6 @@ function pageone_make_seo_columns_sortable( $cols ) {
 }
 add_filter( 'manage_edit-post_sortable_columns', 'pageone_make_seo_columns_sortable' );
 add_filter( 'manage_edit-page_sortable_columns', 'pageone_make_seo_columns_sortable' );
-add_filter( 'manage_edit-locations_sortable_columns', 'pageone_make_seo_columns_sortable' );
 
 function pageone_handle_seo_column_sorting( $query ) {
     if ( is_admin() && $query->is_main_query() ) {
@@ -388,7 +380,7 @@ add_action( 'quick_edit_custom_box', 'pageone_add_quick_edit_fields', 10, 2 );
 
 function pageone_admin_footer_script() {
     $screen = get_current_screen();
-    if ( ! in_array( $screen->id, ['edit-post','edit-page','edit-locations'], true ) ) return;	
+    if ( ! in_array( $screen->id, ['edit-post','edit-page'], true ) ) return;	
 	
     ?>
     <script type="text/javascript">
@@ -421,7 +413,7 @@ add_action( 'admin_footer', 'pageone_admin_footer_script' );
 // ──────────────────────────────────────────────────────────────────────────────
 function pageone_admin_css() {
 	$screen = get_current_screen();
-	if ( ! in_array( $screen->id, ['edit-post','edit-page','edit-locations'], true ) ) return;
+	if ( ! in_array( $screen->id, ['edit-post','edit-page'], true ) ) return;
 
 ?>
     <style>

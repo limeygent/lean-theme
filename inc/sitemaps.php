@@ -64,9 +64,9 @@ add_action( 'init', 'pageone_posts_sitemap_check' );
 function pageone_generate_pages_sitemap() {
     header( 'Content-Type: application/xml; charset=utf-8' );
 
-	// Pull both Pages and Locations (published only)
+	// Pull Pages (published only)
 	$pages = get_posts( [
-		'post_type'      => [ 'page', 'locations' ],
+		'post_type'      => 'page',
 		'post_status'    => 'publish',
 		'posts_per_page' => -1,
 	] );

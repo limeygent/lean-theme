@@ -6,7 +6,7 @@ A lightweight, performance-optimized WordPress theme that bypasses `wp_head()` f
 
 - **Zero Dependencies** - No parent theme required, just core WordPress
 - **Performance First** - Bypasses wp_head() bloat, preloads critical assets
-- **Custom Post Types** - FAQ, Testimonials, Locations, Jobs (built-in)
+- **Custom Post Types** - Testimonials (built-in)
 - **SEO Ready** - Meta box for title/description, Schema.org markup
 - **Contact Forms** - Custom form system with database storage, no plugins needed
 - **CSS-Only Mobile Menu** - No JavaScript required for navigation
@@ -46,8 +46,6 @@ All business information is configured in **Appearance > Lean Theme**:
 ### Content
 ```
 [testimonials num_reviews="6"]
-[faq_list]
-[display_jobs limit="6"]
 [lean_form]
 [map_embed]
 [latest_blog_post]
@@ -74,14 +72,10 @@ lean-theme/
 │   ├── forms.php       # Contact form system
 │   ├── settings.php    # Admin settings page
 │   ├── sitemaps.php    # Custom XML sitemaps
-│   ├── locations.php   # Location rewrites
 │   ├── disable-features.php
 │   └── shortcodes/
 │       ├── blog.php
 │       ├── testimonials.php
-│       ├── faqs.php
-│       ├── jobs.php
-│       ├── job-submit.php
 │       └── maps.php
 └── templates/
     ├── page-lean.php   # Optimized page template

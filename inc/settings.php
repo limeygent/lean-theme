@@ -258,8 +258,6 @@ function lean_theme_shortcodes_reference() {
 				<tbody>
 					<tr><td><code>[lean_form]</code></td><td>Contact form</td></tr>
 					<tr><td><code>[testimonials num_reviews="6"]</code></td><td>Display testimonials</td></tr>
-					<tr><td><code>[faq_list]</code></td><td>Display FAQs</td></tr>
-					<tr><td><code>[display_jobs limit="6"]</code></td><td>Display job portfolio</td></tr>
 					<tr><td><code>[latest_blog_post]</code></td><td>Link to latest post</td></tr>
 				</tbody>
 			</table>
