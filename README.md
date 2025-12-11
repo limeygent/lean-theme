@@ -32,6 +32,43 @@ All business information is configured in **Appearance > Lean Theme**:
 | Contact Form | Recipient emails, Success/Error messages |
 | Shortcodes | Reference of all available shortcodes |
 
+## Customizing Brand Colors
+
+The theme uses CSS variables for all brand colors. Configure them in **Appearance > Lean Theme > Appearance**:
+
+| Setting | CSS Variables Generated | Used By |
+|---------|------------------------|---------|
+| Primary Color | `--brand`, `--brand-dark`, `--brand-darker`, `--brand-rgb` | Buttons, hero overlay, links, footer text |
+| Secondary Color | `--accent` | Callout borders, accent elements |
+| Footer Color | `--footer-bg` | Footer background |
+
+**Example:** Setting Primary Color to `#005395` automatically generates:
+
+```css
+:root {
+  --brand: #005395;
+  --brand-dark: #00477e;    /* 15% darker */
+  --brand-darker: #003a6b;  /* 25% darker */
+  --brand-rgb: 0, 83, 149;  /* For rgba() usage */
+}
+```
+
+**For additional customizations**, add CSS to `css/lean-pages.css`:
+
+```css
+/* Override or extend brand variables */
+:root {
+  --accent: goldenrod;
+  --footer-text: #cccccc;
+}
+
+/* Site-specific component styles */
+.my-custom-section {
+  background: var(--brand);
+  color: white;
+}
+```
+
 ## Shortcodes
 
 ### Business Information
