@@ -12,6 +12,7 @@
 $ga4_id = get_option('ga4_measurement_id', '');
 $logo_url = get_option('business_logo_url', '');
 $business_name = get_option('business_name', get_bloginfo('name'));
+$header_tagline = get_option('header_tagline', 'Your fancy site tagline here (CHANGE IT NOW)');
 ?>
 
 <?php if ($ga4_id): ?>
@@ -35,7 +36,7 @@ $business_name = get_option('business_name', get_bloginfo('name'));
 			<div class="container">
 				<div class="row">
 					<div class="col-lg-6 align-self-center">
-						Worry-free Pool Service for Busy People
+						<?php echo esc_html($header_tagline); ?>
 					</div>
 					<div class="col-lg-6 text-right align-self-center">
 						<?php echo do_shortcode('[business_phone_link]'); ?>

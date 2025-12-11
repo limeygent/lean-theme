@@ -93,6 +93,13 @@ function lean_theme_business_fields() {
 		<td><input type="text" name="business_name" id="business_name" value="<?php echo esc_attr(get_option('business_name', '')); ?>" class="regular-text"></td>
 	</tr>
 	<tr>
+		<th scope="row"><label for="header_tagline">Header Tagline</label></th>
+		<td>
+			<input type="text" name="header_tagline" id="header_tagline" value="<?php echo esc_attr(get_option('header_tagline', 'Your fancy site tagline here (CHANGE IT NOW)')); ?>" class="large-text">
+			<p class="description">Displayed in the top header bar on desktop</p>
+		</td>
+	</tr>
+	<tr>
 		<th scope="row"><label for="business_url">Website URL</label></th>
 		<td><input type="url" name="business_url" id="business_url" value="<?php echo esc_attr(get_option('business_url', home_url())); ?>" class="regular-text"></td>
 	</tr>
@@ -273,7 +280,7 @@ function lean_theme_shortcodes_reference() {
 function lean_theme_save_settings() {
 	// Business info
 	$text_fields = array(
-		'business_name', 'business_phone', 'business_address',
+		'business_name', 'header_tagline', 'business_phone', 'business_address',
 		'business_city', 'business_state', 'business_zip',
 		'google_maps_cid', 'google_kgid', 'ga4_measurement_id', 'clarity_project_id',
 		'primary_color', 'secondary_color', 'footer_color',
