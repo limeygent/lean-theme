@@ -131,7 +131,7 @@ lean-theme/
 ## Requirements
 
 - WordPress 6.0+
-- PHP 8.0+
+- PHP 7.4+
 - ACF Pro (optional, for hero images)
 
 ## License
