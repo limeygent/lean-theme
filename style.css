@@ -14,29 +14,35 @@ Text Domain: lean-theme
 This theme bypasses wp_head() for maximum performance.
 All styles are loaded inline or via preload in templates/head.php.
 */
+
 /* ================================
-   Brand Styles
+   CSS Variables (defaults)
+   Override via Theme Settings or lean-pages.css
    ================================ */
 :root {
-	--brand: #005395; /* primary brand */
-	--brand-dark: #004677; /* hover */
-	--brand-darker: #003a6b; /* deep overlay */
-	--hero-color-1: #003a6b; /* gradient start */
-	--hero-color-2: #005395; /* gradient end */
-	--accent: goldenrod;
+	--brand: #0d6efd;
+	--brand-dark: #0b5ed7;
+	--brand-darker: #0a58ca;
+	--brand-rgb: 13, 110, 253;
+	--accent: #ffc107;
+	--footer-bg: #212529;
+	--footer-text: #ffffff;
 }
 
 /* ================================
-   Base font
+   Base Styles
    ================================ */
-body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+body {
+	font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
 
+.lean-main {
+	font-size: 1rem;
+}
 
 /* ================================
-   CSS Reset & Base Styles
+   Accessibility
    ================================ */
-
-/* ADA screen reader */
 .lean-skip {
 	border: 0;
 	clip: rect(1px,1px,1px,1px);
@@ -47,42 +53,43 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 	padding: 0;
 	position: absolute !important;
 	width: 1px;
-	white-space: nowrap; /* prevents accidental wrap */
+	white-space: nowrap;
 }
 
-.lean-main {
-	font-size: 1rem;
-}
-
-
-/* Buttons */
-.btn-primary { background-color: var(--brand); border-color: var(--brand); }
-.btn-primary:hover, .btn-primary:focus { background-color: var(--brand-dark); border-color: var(--brand-dark); }
-
-.btn-warning {
-	background-color: #ffa41c;
-	color: black;
-}
-
-
-
-/* Reveal on keyboard focus (WCAG) */
 .lean-skip:focus {
 	position: fixed !important;
-	left: 1rem; top: 1rem;
-	width: auto; height: auto;
-	clip: auto; clip-path: none; overflow: visible;
+	left: 1rem;
+	top: 1rem;
+	width: auto;
+	height: auto;
+	clip: auto;
+	clip-path: none;
+	overflow: visible;
 	padding: .5rem 1rem;
-	background: #000; color: #fff;
-	outline: 2px solid #fff; outline-offset: 2px;
+	background: #000;
+	color: #fff;
+	outline: 2px solid #fff;
+	outline-offset: 2px;
 	z-index: 10000;
 }
 
+/* ================================
+   Button Overrides (use brand colors)
+   ================================ */
+.btn-primary {
+	background-color: var(--brand);
+	border-color: var(--brand);
+}
 
-/*
-*  header
-*/
-/* Nav toggle (hamburger) */
+.btn-primary:hover,
+.btn-primary:focus {
+	background-color: var(--brand-dark);
+	border-color: var(--brand-dark);
+}
+
+/* ================================
+   Header
+   ================================ */
 .lean-header .nav-toggle {
 	display: none;
 }
@@ -130,7 +137,6 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 	top: 8px;
 }
 
-/* Close button inside nav */
 .lean-header .nav-close {
 	position: absolute;
 	top: 1rem;
@@ -146,7 +152,6 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 	padding: 0;
 }
 
-/* Mobile navigation - full width */
 .lean-header .header-nav {
 	position: fixed;
 	top: 0;
@@ -169,7 +174,6 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 	margin-top: 3rem;
 }
 
-/* Make parent menu items contain their submenus */
 .lean-header .header-menu > li {
 	display: block !important;
 	clear: both;
@@ -192,10 +196,10 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 }
 
 .lean-header .header-menu a:hover {
-	color: #0066cc;
+	color: var(--brand);
 }
 
-/* Submenu styles for mobile - FORCE VISIBLE, no hover needed */
+/* Mobile submenu */
 @media (max-width: 991px) {
 	.lean-header .header-menu .sub-menu {
 		list-style: none !important;
@@ -229,7 +233,6 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 
 /* Desktop styles */
 @media (min-width: 992px) {
-	/* Show nav inline on desktop */
 	.lean-header .header-nav {
 		position: static;
 		width: auto;
@@ -263,7 +266,6 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 		border-bottom: none;
 	}
 
-	/* Desktop submenu - dropdown on hover */
 	.lean-header .header-menu .sub-menu {
 		position: absolute !important;
 		top: 100%;
@@ -291,7 +293,7 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 	.lean-header .header-menu .sub-menu a:hover {
 		background: #f8f9fa;
 	}
-}	
+}
 
 .lean-header .header-logo img {
 	height: 60px;
@@ -304,46 +306,76 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 	}
 }
 
-.lean-header .lean-header .btn {
-	padding: 0.5rem;
-	font-size: 1rem;
+/* ================================
+   Hero Section
+   ================================ */
+#lean-main .hero {
+	position: relative;
+	color: #fff;
+	background-color: var(--brand-darker);
 }
 
+#lean-main .hero-bg,
+#lean-main .hero-overlay {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 100vw;
+	height: 100%;
+	pointer-events: none;
+}
 
-/*
-*  hero
-*/
-#lean-main .hero { position: relative; color:#fff; background-color: var(--brand-darker); }
-#lean-main .hero-bg, .hero-overlay { position:absolute; top:0; left:50%; transform:translateX(-50%); width:100vw; height:100%; pointer-events:none; }
-#lean-main .hero-overlay { background: linear-gradient(90deg, rgba(0,83,149,.75) 0%, rgba(0,83,149,.6) 60%, rgba(0,83,149,.2) 100%); z-index:1; }
-#lean-main .hero-content { position:relative; z-index:2; }
-#lean-main .badge-trust { background: rgba(0,0,0,.35); color:#fff; border:1px solid rgba(255,255,255,.45); border-radius: 999px; padding:.5rem .75rem; font-weight:600; letter-spacing:.01em; }
+#lean-main .hero-overlay {
+	background: linear-gradient(90deg, rgba(var(--brand-rgb), 0.75) 0%, rgba(var(--brand-rgb), 0.6) 60%, rgba(var(--brand-rgb), 0.2) 100%);
+	z-index: 1;
+}
 
-/*
-*  footer
-*/
+#lean-main .hero-content {
+	position: relative;
+	z-index: 2;
+}
+
+#lean-main .badge-trust {
+	background: rgba(0,0,0,0.35);
+	color: #fff;
+	border: 1px solid rgba(255,255,255,0.45);
+	border-radius: 999px;
+	padding: 0.5rem 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+
+/* ================================
+   Footer
+   ================================ */
 .lean-footer {
-	background-color: #005395;
-	color: white;
+	background-color: var(--footer-bg);
+	color: var(--footer-text);
 	padding-top: 40px;
 }
+
 .lean-footer .container a {
-	color: white;
+	color: var(--footer-text);
 }
+
 .lean-footer .footer-bottom {
-	background-color: white;
-	color: #005395;
+	background-color: #fff;
+	color: var(--brand);
 	padding: 10px 0;
 	text-align: center;
 }
 
-/*
-* body
-*/
-.section{ padding:90px 0; overflow:hidden;}
+/* ================================
+   Content Sections
+   ================================ */
+.section {
+	padding: 90px 0;
+	overflow: hidden;
+}
 
-/* effect around the sections to make them stand out */
-.ebp-section {
+/* Generic card section styling */
+.lean-section {
 	background: white;
 	margin-top: 4rem;
 	padding: 3rem 2rem;
@@ -351,26 +383,25 @@ body{font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,san
 	box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.container.ebp-section {
+.container.lean-section {
 	padding: 3rem 2rem;
 	margin: 4rem auto;
 }
 
-/* Responsive adjustments for mobile */
 @media (max-width: 768px) {
-	.ebp-section {
+	.lean-section {
 		padding: 2rem 1rem;
 		margin: 1rem 0;
 	}
 }
 
-/*
-* element styles
-*/
+/* ================================
+   Utility Classes
+   ================================ */
 .callout {
-  background-color: var(--brand);
-  padding: 15px;
-  border-left: 8px solid var(--accent);
-  margin: 20px 0;
-  color: white;
+	background-color: var(--brand);
+	padding: 15px;
+	border-left: 8px solid var(--accent);
+	margin: 20px 0;
+	color: white;
 }

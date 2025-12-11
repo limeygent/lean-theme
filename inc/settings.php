@@ -307,31 +307,85 @@ function lean_theme_save_settings() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// INJECT CUSTOM COLORS
+// INJECT CUSTOM COLORS AS CSS VARIABLES
 // ──────────────────────────────────────────────────────────────────────────────
 
 function lean_theme_inject_custom_colors() {
-	$footer_color = get_option('footer_color');
 	$primary_color = get_option('primary_color');
 	$secondary_color = get_option('secondary_color');
+	$footer_color = get_option('footer_color');
 
-	if (!$footer_color && !$primary_color && !$secondary_color) {
+	if (!$primary_color && !$secondary_color && !$footer_color) {
 		return;
 	}
 
-	echo '<style>';
-	if ($footer_color) {
-		echo '.footer_color { background-color: ' . esc_attr($footer_color) . ' !important; }';
-	}
+	echo '<style>:root{';
+
 	if ($primary_color) {
-		echo '.primary_color { background-color: ' . esc_attr($primary_color) . ' !important; }';
+		// Convert hex to RGB for rgba() usage
+		$rgb = lean_hex_to_rgb($primary_color);
+		echo '--brand:' . esc_attr($primary_color) . ';';
+		echo '--brand-dark:' . esc_attr(lean_adjust_brightness($primary_color, -15)) . ';';
+		echo '--brand-darker:' . esc_attr(lean_adjust_brightness($primary_color, -25)) . ';';
+		if ($rgb) {
+			echo '--brand-rgb:' . esc_attr($rgb['r'] . ',' . $rgb['g'] . ',' . $rgb['b']) . ';';
+		}
 	}
+
 	if ($secondary_color) {
-		echo '.secondary_color { background-color: ' . esc_attr($secondary_color) . ' !important; }';
+		echo '--accent:' . esc_attr($secondary_color) . ';';
 	}
-	echo '</style>';
+
+	if ($footer_color) {
+		echo '--footer-bg:' . esc_attr($footer_color) . ';';
+	}
+
+	echo '}</style>';
 }
 add_action('wp_head', 'lean_theme_inject_custom_colors');
+
+/**
+ * Convert hex color to RGB array
+ */
+function lean_hex_to_rgb($hex) {
+	$hex = ltrim($hex, '#');
+	if (strlen($hex) === 3) {
+		$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+	}
+	if (strlen($hex) !== 6) {
+		return false;
+	}
+	return [
+		'r' => hexdec(substr($hex, 0, 2)),
+		'g' => hexdec(substr($hex, 2, 2)),
+		'b' => hexdec(substr($hex, 4, 2)),
+	];
+}
+
+/**
+ * Adjust hex color brightness
+ * @param string $hex Hex color
+ * @param int $percent Positive = lighter, Negative = darker
+ */
+function lean_adjust_brightness($hex, $percent) {
+	$hex = ltrim($hex, '#');
+	if (strlen($hex) === 3) {
+		$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+	}
+
+	$rgb = [
+		hexdec(substr($hex, 0, 2)),
+		hexdec(substr($hex, 2, 2)),
+		hexdec(substr($hex, 4, 2)),
+	];
+
+	foreach ($rgb as &$color) {
+		$color = max(0, min(255, $color + ($color * $percent / 100)));
+		$color = round($color);
+	}
+
+	return sprintf('#%02x%02x%02x', $rgb[0], $rgb[1], $rgb[2]);
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // SHORTCODES
