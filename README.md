@@ -11,6 +11,7 @@ A lightweight, performance-optimized WordPress theme that bypasses `wp_head()` f
 - **Contact Forms** - Custom form system with database storage, no plugins needed
 - **CSS-Only Mobile Menu** - No JavaScript required for navigation
 - **Self-Hosted Fonts** - Roboto loaded locally with font-display: swap
+- **Bootstrap 5.3.3** - Included locally, no CDN dependency
 
 ## Installation
 
@@ -66,6 +67,12 @@ lean-theme/
 ├── functions.php       # Loader
 ├── style.css           # Theme declaration + styles
 ├── index.php           # Fallback template
+├── assets/
+│   └── fonts/
+│       └── roboto/     # Self-hosted Roboto fonts
+├── css/
+│   ├── bootstrap.css   # Bootstrap 5.3.3
+│   └── lean-pages.css  # Custom page styles
 ├── inc/
 │   ├── cpts.php        # Custom Post Types
 │   ├── seo.php         # Meta boxes & output
