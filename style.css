@@ -4,7 +4,7 @@ Theme URI:
 Author:
 Author URI:
 Description: A lightweight WordPress theme optimized for performance. No bloat, no dependencies on parent themes - just clean, fast pages.
-Version: 1.0.0
+Version: 1.1.0
 Requires at least: 6.0
 Requires PHP: 7.4
 License: GNU General Public License v2 or later
@@ -12,12 +12,12 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: lean-theme
 
 This theme bypasses wp_head() for maximum performance.
-All styles are loaded inline or via preload in templates/head.php.
+All styles are loaded inline or via preload in template-parts/head.php.
 */
 
 /* ================================
    CSS Variables (defaults)
-   Override via Theme Settings or lean-pages.css
+   Override via Theme Settings or inline styles
    ================================ */
 :root {
 	--brand: #0d6efd;
@@ -27,6 +27,10 @@ All styles are loaded inline or via preload in templates/head.php.
 	--accent: #ffc107;
 	--footer-bg: #212529;
 	--footer-text: #ffffff;
+	/* Nav colors - can be overridden via inline styles */
+	--nav-color: #333333;
+	--dropdown-bg: #ffffff;
+	--dropdown-text: #333333;
 }
 
 /* ================================
@@ -88,8 +92,103 @@ body {
 }
 
 /* ================================
-   Header
+   Header - Top Bar
    ================================ */
+.lean-header .header-top {
+	padding: 8px 0;
+}
+
+.lean-header .header-top a {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* Header Top Items (custom items mode) */
+.lean-header .header-top-items {
+	gap: 1rem;
+}
+
+.lean-header .header-item {
+	display: flex;
+	align-items: center;
+}
+
+.lean-header .header-item-link {
+	text-decoration: none;
+	color: inherit;
+}
+
+.lean-header .header-badge-img {
+	max-height: 50px;
+	width: auto;
+}
+
+.lean-header .header-icon-box {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.5rem 1rem;
+	border: 2px solid currentColor;
+	border-radius: 4px;
+}
+
+.lean-header .header-icon-box .header-icon {
+	font-size: 1.25rem;
+}
+
+.lean-header .header-icon-box .header-text {
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.lean-header .header-icon-box .header-text small {
+	font-weight: 400;
+	opacity: 0.8;
+}
+
+.lean-header .header-text-only {
+	font-weight: 500;
+}
+
+.lean-header .header-phone-btn {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	text-align: right;
+}
+
+.lean-header .header-phone-btn .phone-subtext {
+	font-size: 0.875rem;
+	font-weight: 600;
+	margin-bottom: 0.25rem;
+}
+
+.lean-header .header-phone-btn .btn {
+	font-weight: 700;
+	padding: 0.5rem 1.25rem;
+}
+
+/* ================================
+   Header - Logo & Navigation
+   ================================ */
+.lean-header .header-logo img {
+	height: 60px;
+	width: auto;
+}
+
+@media (min-width: 768px) {
+	.lean-header .header-logo img {
+		height: 100px;
+	}
+}
+
+.lean-header .site-title {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: var(--nav-color, var(--brand));
+}
+
+/* Nav Toggle (hamburger) */
 .lean-header .nav-toggle {
 	display: none;
 }
@@ -107,7 +206,7 @@ body {
 
 .lean-header .nav-toggle-open span {
 	display: block;
-	background: #333;
+	background: var(--nav-color, #333);
 	height: 3px;
 	width: 100%;
 	border-radius: 2px;
@@ -121,7 +220,7 @@ body {
 .lean-header .nav-toggle-open span::after {
 	content: '';
 	display: block;
-	background: #333;
+	background: var(--nav-color, #333);
 	height: 3px;
 	width: 100%;
 	border-radius: 2px;
@@ -152,6 +251,7 @@ body {
 	padding: 0;
 }
 
+/* Mobile navigation - full screen overlay */
 .lean-header .header-nav {
 	position: fixed;
 	top: 0;
@@ -187,16 +287,16 @@ body {
 .lean-header .header-menu a {
 	display: block;
 	padding: 1rem 0;
-	color: #333;
+	color: var(--nav-color, #333);
 	text-decoration: none;
 	font-weight: 500;
 	font-size: 1.125rem;
-	transition: color 0.2s ease;
+	transition: color 0.2s ease, opacity 0.2s ease;
 	border-bottom: 1px solid #eee;
 }
 
 .lean-header .header-menu a:hover {
-	color: var(--brand);
+	opacity: 0.7;
 }
 
 /* Mobile submenu */
@@ -266,11 +366,12 @@ body {
 		border-bottom: none;
 	}
 
+	/* Desktop dropdown submenu */
 	.lean-header .header-menu .sub-menu {
 		position: absolute !important;
 		top: 100%;
 		left: 0;
-		background: #fff;
+		background: var(--dropdown-bg, #fff);
 		box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 		padding: 0 !important;
 		margin-top: 0;
@@ -288,21 +389,11 @@ body {
 		font-size: 0.9rem !important;
 		border-bottom: none !important;
 		white-space: nowrap;
+		color: var(--dropdown-text, #333) !important;
 	}
 
 	.lean-header .header-menu .sub-menu a:hover {
-		background: #f8f9fa;
-	}
-}
-
-.lean-header .header-logo img {
-	height: 60px;
-	width: auto;
-}
-
-@media (min-width: 768px) {
-	.lean-header .header-logo img {
-		height: 100px;
+		opacity: 0.7;
 	}
 }
 
@@ -350,13 +441,11 @@ body {
    Footer
    ================================ */
 .lean-footer {
-	background-color: var(--footer-bg);
-	color: var(--footer-text);
 	padding-top: 40px;
 }
 
 .lean-footer .container a {
-	color: var(--footer-text);
+	color: inherit;
 }
 
 .lean-footer .footer-bottom {
@@ -364,6 +453,18 @@ body {
 	color: var(--brand);
 	padding: 10px 0;
 	text-align: center;
+}
+
+.lean-footer .footer-bottom a {
+	color: var(--brand);
+}
+
+.lean-footer .hours {
+	margin-bottom: 0.25rem;
+}
+
+.lean-footer .map-container iframe {
+	border-radius: 8px;
 }
 
 /* ================================

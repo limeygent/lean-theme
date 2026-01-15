@@ -95,8 +95,8 @@ function lean_theme_business_fields() {
 	<tr>
 		<th scope="row"><label for="header_tagline">Header Tagline</label></th>
 		<td>
-			<input type="text" name="header_tagline" id="header_tagline" value="<?php echo esc_attr(get_option('header_tagline', 'Your fancy site tagline here (CHANGE IT NOW)')); ?>" class="large-text">
-			<p class="description">Displayed in the top header bar on desktop</p>
+			<input type="text" name="header_tagline" id="header_tagline" value="<?php echo esc_attr(get_option('header_tagline', '')); ?>" class="large-text">
+			<p class="description">Displayed in the top header bar on desktop (when mode is set to "Tagline")</p>
 		</td>
 	</tr>
 	<tr>
@@ -124,10 +124,38 @@ function lean_theme_business_fields() {
 		<td><input type="text" name="business_zip" id="business_zip" value="<?php echo esc_attr(get_option('business_zip', '')); ?>" class="small-text" maxlength="10"></td>
 	</tr>
 	<tr>
+		<th scope="row"><label for="business_hours">Business Hours</label></th>
+		<td>
+			<textarea name="business_hours" id="business_hours" rows="5" class="large-text"><?php echo esc_textarea(get_option('business_hours', '')); ?></textarea>
+			<p class="description">HTML allowed. Example: <code>&lt;p class="hours"&gt;Mon-Fri: 8am-5pm&lt;/p&gt;</code></p>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="service_area">Service Area</label></th>
+		<td>
+			<input type="text" name="service_area" id="service_area" value="<?php echo esc_attr(get_option('service_area', '')); ?>" class="regular-text" placeholder="Dallas-Fort Worth Metroplex">
+			<p class="description">Displayed in footer</p>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="service_area_url">Service Area Link</label></th>
+		<td>
+			<input type="text" name="service_area_url" id="service_area_url" value="<?php echo esc_attr(get_option('service_area_url', '/service-areas/')); ?>" class="regular-text">
+			<p class="description">URL for service area link</p>
+		</td>
+	</tr>
+	<tr>
 		<th scope="row"><label for="google_maps_cid">Google Maps CID</label></th>
 		<td>
 			<input type="text" name="google_maps_cid" id="google_maps_cid" value="<?php echo esc_attr(get_option('google_maps_cid', '')); ?>" class="regular-text">
-			<p class="description">Your Google Business Profile CID (for map embed)</p>
+			<p class="description">Your Google Business Profile CID (used if embed URL not set)</p>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="google_maps_embed_url">Google Maps Embed URL</label></th>
+		<td>
+			<input type="url" name="google_maps_embed_url" id="google_maps_embed_url" value="<?php echo esc_attr(get_option('google_maps_embed_url', '')); ?>" class="large-text">
+			<p class="description">Full embed URL from Google Maps (takes priority over CID)</p>
 		</td>
 	</tr>
 	<tr>
@@ -145,7 +173,12 @@ function lean_theme_business_fields() {
 }
 
 function lean_theme_appearance_fields() {
+	$header_top_mode = get_option('header_top_mode', 'tagline');
+	$header_top_items = get_option('header_top_items', []);
+	if (!is_array($header_top_items)) $header_top_items = [];
 	?>
+
+	<tr><td colspan="2"><h2>Logo</h2></td></tr>
 	<tr>
 		<th scope="row"><label for="business_logo_url">Logo URL</label></th>
 		<td>
@@ -153,17 +186,118 @@ function lean_theme_appearance_fields() {
 			<p class="description">Full URL to your logo image (displayed in header and footer)</p>
 		</td>
 	</tr>
+
+	<tr><td colspan="2"><h2>Header Top Bar</h2></td></tr>
+	<tr>
+		<th scope="row"><label for="header_top_mode">Top Bar Mode</label></th>
+		<td>
+			<select name="header_top_mode" id="header_top_mode">
+				<option value="none" <?php selected($header_top_mode, 'none'); ?>>None (hidden)</option>
+				<option value="tagline" <?php selected($header_top_mode, 'tagline'); ?>>Simple Tagline + Phone</option>
+				<option value="items" <?php selected($header_top_mode, 'items'); ?>>Custom Items</option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="header_top_bg">Top Bar Background</label></th>
+		<td><input type="text" name="header_top_bg" id="header_top_bg" value="<?php echo esc_attr(get_option('header_top_bg', '#f8f9fa')); ?>" class="regular-text" placeholder="#f8f9fa"></td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="header_top_text">Top Bar Text</label></th>
+		<td><input type="text" name="header_top_text" id="header_top_text" value="<?php echo esc_attr(get_option('header_top_text', '#333333')); ?>" class="regular-text" placeholder="#333333"></td>
+	</tr>
+
+	<!-- Custom Header Items (shown when mode = items) -->
+	<tr class="header-items-row">
+		<th scope="row">Header Top Items</th>
+		<td>
+			<p class="description" style="margin-bottom:15px;">Configure up to 4 items for the top header bar. Types: badge (image), icon-box (icon + text), text, phone-button.</p>
+			<?php for ($i = 0; $i < 4; $i++):
+				$item = isset($header_top_items[$i]) ? $header_top_items[$i] : [];
+			?>
+			<fieldset style="border:1px solid #ccc; padding:15px; margin-bottom:15px; background:#fafafa;">
+				<legend style="font-weight:bold;">Item <?php echo $i + 1; ?></legend>
+				<table class="form-table" style="margin:0;">
+					<tr>
+						<th><label>Type</label></th>
+						<td>
+							<select name="header_top_items[<?php echo $i; ?>][type]">
+								<option value="">-- None --</option>
+								<option value="badge" <?php selected($item['type'] ?? '', 'badge'); ?>>Badge (Image)</option>
+								<option value="icon-box" <?php selected($item['type'] ?? '', 'icon-box'); ?>>Icon Box</option>
+								<option value="text" <?php selected($item['type'] ?? '', 'text'); ?>>Text Only</option>
+								<option value="phone-button" <?php selected($item['type'] ?? '', 'phone-button'); ?>>Phone Button</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th><label>Icon (FA class)</label></th>
+						<td><input type="text" name="header_top_items[<?php echo $i; ?>][icon]" value="<?php echo esc_attr($item['icon'] ?? ''); ?>" class="regular-text" placeholder="fa-star"></td>
+					</tr>
+					<tr>
+						<th><label>Text</label></th>
+						<td><input type="text" name="header_top_items[<?php echo $i; ?>][text]" value="<?php echo esc_attr($item['text'] ?? ''); ?>" class="regular-text"></td>
+					</tr>
+					<tr>
+						<th><label>Subtext</label></th>
+						<td><input type="text" name="header_top_items[<?php echo $i; ?>][subtext]" value="<?php echo esc_attr($item['subtext'] ?? ''); ?>" class="regular-text"></td>
+					</tr>
+					<tr>
+						<th><label>Link URL</label></th>
+						<td><input type="url" name="header_top_items[<?php echo $i; ?>][link]" value="<?php echo esc_attr($item['link'] ?? ''); ?>" class="regular-text"></td>
+					</tr>
+					<tr>
+						<th><label>Image URL (badges)</label></th>
+						<td><input type="url" name="header_top_items[<?php echo $i; ?>][image]" value="<?php echo esc_attr($item['image'] ?? ''); ?>" class="large-text"></td>
+					</tr>
+				</table>
+			</fieldset>
+			<?php endfor; ?>
+		</td>
+	</tr>
+
+	<tr><td colspan="2"><h2>Header Navigation</h2></td></tr>
+	<tr>
+		<th scope="row"><label for="header_main_bg">Header Background</label></th>
+		<td><input type="text" name="header_main_bg" id="header_main_bg" value="<?php echo esc_attr(get_option('header_main_bg', '#ffffff')); ?>" class="regular-text" placeholder="#ffffff"></td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="header_nav_text">Nav Text Color</label></th>
+		<td><input type="text" name="header_nav_text" id="header_nav_text" value="<?php echo esc_attr(get_option('header_nav_text', '#333333')); ?>" class="regular-text" placeholder="#333333"></td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="dropdown_bg">Dropdown Background</label></th>
+		<td><input type="text" name="dropdown_bg" id="dropdown_bg" value="<?php echo esc_attr(get_option('dropdown_bg', '#ffffff')); ?>" class="regular-text" placeholder="#ffffff"></td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="dropdown_text">Dropdown Text Color</label></th>
+		<td><input type="text" name="dropdown_text" id="dropdown_text" value="<?php echo esc_attr(get_option('dropdown_text', '#333333')); ?>" class="regular-text" placeholder="#333333"></td>
+	</tr>
+
+	<tr><td colspan="2"><h2>Brand Colors</h2></td></tr>
 	<tr>
 		<th scope="row"><label for="primary_color">Primary Color</label></th>
-		<td><input type="text" name="primary_color" id="primary_color" value="<?php echo esc_attr(get_option('primary_color', '')); ?>" class="regular-text" placeholder="#0073aa"></td>
+		<td>
+			<input type="text" name="primary_color" id="primary_color" value="<?php echo esc_attr(get_option('primary_color', '#0d6efd')); ?>" class="regular-text" placeholder="#0d6efd">
+			<p class="description">Used for buttons, links, hero overlay (sets --brand CSS variable)</p>
+		</td>
 	</tr>
 	<tr>
-		<th scope="row"><label for="secondary_color">Secondary Color</label></th>
-		<td><input type="text" name="secondary_color" id="secondary_color" value="<?php echo esc_attr(get_option('secondary_color', '')); ?>" class="regular-text" placeholder="#23282d"></td>
+		<th scope="row"><label for="secondary_color">Accent Color</label></th>
+		<td>
+			<input type="text" name="secondary_color" id="secondary_color" value="<?php echo esc_attr(get_option('secondary_color', '#ffc107')); ?>" class="regular-text" placeholder="#ffc107">
+			<p class="description">Used for callouts, highlights (sets --accent CSS variable)</p>
+		</td>
+	</tr>
+
+	<tr><td colspan="2"><h2>Footer</h2></td></tr>
+	<tr>
+		<th scope="row"><label for="footer_bg">Footer Background</label></th>
+		<td><input type="text" name="footer_bg" id="footer_bg" value="<?php echo esc_attr(get_option('footer_bg', '#212529')); ?>" class="regular-text" placeholder="#212529"></td>
 	</tr>
 	<tr>
-		<th scope="row"><label for="footer_color">Footer Color</label></th>
-		<td><input type="text" name="footer_color" id="footer_color" value="<?php echo esc_attr(get_option('footer_color', '')); ?>" class="regular-text" placeholder="#1d2327"></td>
+		<th scope="row"><label for="footer_text">Footer Text Color</label></th>
+		<td><input type="text" name="footer_text" id="footer_text" value="<?php echo esc_attr(get_option('footer_text', '#ffffff')); ?>" class="regular-text" placeholder="#ffffff"></td>
 	</tr>
 	<?php
 }
@@ -237,6 +371,7 @@ function lean_theme_shortcodes_reference() {
 					<tr><td><code>[business_name]</code></td><td><?php echo esc_html(get_option('business_name', '(not set)')); ?></td></tr>
 					<tr><td><code>[business_phone]</code></td><td><?php echo esc_html(get_option('business_phone', '(not set)')); ?></td></tr>
 					<tr><td><code>[business_phone_link]</code></td><td>Clickable phone link</td></tr>
+					<tr><td><code>[business_phone_url]</code></td><td>tel: URL only</td></tr>
 					<tr><td><code>[business_phone_button class="btn btn-primary"]</code></td><td>Phone link with custom class</td></tr>
 					<tr><td><code>[business_address]</code></td><td><?php echo esc_html(get_option('business_address', '(not set)')); ?></td></tr>
 					<tr><td><code>[business_city]</code></td><td><?php echo esc_html(get_option('business_city', '(not set)')); ?></td></tr>
@@ -278,12 +413,15 @@ function lean_theme_shortcodes_reference() {
 // ──────────────────────────────────────────────────────────────────────────────
 
 function lean_theme_save_settings() {
-	// Business info
+	// Text fields
 	$text_fields = array(
 		'business_name', 'header_tagline', 'business_phone', 'business_address',
-		'business_city', 'business_state', 'business_zip',
+		'business_city', 'business_state', 'business_zip', 'service_area', 'service_area_url',
 		'google_maps_cid', 'google_kgid', 'ga4_measurement_id', 'clarity_project_id',
-		'primary_color', 'secondary_color', 'footer_color',
+		'primary_color', 'secondary_color',
+		'header_top_mode', 'header_top_bg', 'header_top_text',
+		'header_main_bg', 'header_nav_text', 'dropdown_bg', 'dropdown_text',
+		'footer_bg', 'footer_text',
 		'form_success_message', 'form_error_message'
 	);
 
@@ -294,11 +432,16 @@ function lean_theme_save_settings() {
 	}
 
 	// URL fields
-	$url_fields = array('business_url', 'business_logo_url', 'google_gmb_image_url');
+	$url_fields = array('business_url', 'business_logo_url', 'google_gmb_image_url', 'google_maps_embed_url');
 	foreach ($url_fields as $field) {
 		if (isset($_POST[$field])) {
 			update_option($field, esc_url_raw($_POST[$field]));
 		}
+	}
+
+	// HTML fields (allow safe HTML)
+	if (isset($_POST['business_hours'])) {
+		update_option('business_hours', wp_kses_post($_POST['business_hours']));
 	}
 
 	// Email fields
@@ -311,6 +454,22 @@ function lean_theme_save_settings() {
 
 	// Checkbox
 	update_option('form_send_confirmation', isset($_POST['form_send_confirmation']) ? '1' : '');
+
+	// Header top items (array)
+	if (isset($_POST['header_top_items']) && is_array($_POST['header_top_items'])) {
+		$sanitized_items = [];
+		foreach ($_POST['header_top_items'] as $item) {
+			$sanitized_items[] = [
+				'type'    => sanitize_text_field($item['type'] ?? ''),
+				'icon'    => sanitize_text_field($item['icon'] ?? ''),
+				'text'    => sanitize_text_field($item['text'] ?? ''),
+				'subtext' => sanitize_text_field($item['subtext'] ?? ''),
+				'link'    => esc_url_raw($item['link'] ?? ''),
+				'image'   => esc_url_raw($item['image'] ?? ''),
+			];
+		}
+		update_option('header_top_items', $sanitized_items);
+	}
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -320,9 +479,8 @@ function lean_theme_save_settings() {
 function lean_theme_inject_custom_colors() {
 	$primary_color = get_option('primary_color');
 	$secondary_color = get_option('secondary_color');
-	$footer_color = get_option('footer_color');
 
-	if (!$primary_color && !$secondary_color && !$footer_color) {
+	if (!$primary_color && !$secondary_color) {
 		return;
 	}
 
@@ -341,10 +499,6 @@ function lean_theme_inject_custom_colors() {
 
 	if ($secondary_color) {
 		echo '--accent:' . esc_attr($secondary_color) . ';';
-	}
-
-	if ($footer_color) {
-		echo '--footer-bg:' . esc_attr($footer_color) . ';';
 	}
 
 	echo '}</style>';
@@ -447,6 +601,13 @@ add_shortcode('business_full_address', function() {
 // Phone (plain text)
 add_shortcode('business_phone', function() {
 	return esc_html(get_option('business_phone', ''));
+});
+
+// Phone URL (tel: link only)
+add_shortcode('business_phone_url', function() {
+	$phone = get_option('business_phone', '');
+	$href_phone = preg_replace('/\D/', '', $phone);
+	return 'tel:+1' . esc_attr($href_phone);
 });
 
 // Phone link

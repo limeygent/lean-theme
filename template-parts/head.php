@@ -7,12 +7,12 @@
  *
  * Usage in page templates:
  *   <head>
- *   <?php get_template_part('templates/head'); ?>
+ *   <?php get_template_part('template-parts/head'); ?>
  *   </head>
  *
  * Optional: Pass hero image via set_query_var before calling:
  *   set_query_var('lean_hero_image', $hero_image_array);
- *   get_template_part('templates/head');
+ *   get_template_part('template-parts/head');
  */
 
 // Get hero image - check if passed via query var first, then try ACF
@@ -84,6 +84,7 @@ $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'
 
 <!-- Apply stylesheets (blocking for FOUC prevention) -->
 <link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/bootstrap.css?ver=1.1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="<?php echo $theme_rel; ?>/style.css?ver=1.667">
 <link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/lean-pages.css?ver=<?php echo $lean_css_ver; ?>">
 
