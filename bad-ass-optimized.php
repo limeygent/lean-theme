@@ -1,14 +1,12 @@
 <?php
 /**
- * Template Name: Lean Theme
- * Description: Optimized single-file template - no bloat.
+ * Template Name: Bad Ass Optimized Page Template
+ * Description: Optimized single-file template - no bloat, maximum performance.
  *
  * Uses template parts from /template-parts/:
  *   - template-parts/lean-head.php
  *   - template-parts/lean-header.php
  *   - template-parts/lean-footer.php
- *
- * Note: This is an alias of bad-ass-optimized.php for backward compatibility.
  */
 ?>
 <!doctype html>

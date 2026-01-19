@@ -5,7 +5,7 @@
  * The optimized footer with business info, map, hours, and tracking scripts.
  *
  * Usage in page templates:
- *   <?php get_template_part('template-parts/footer'); ?>
+ *   <?php get_template_part('template-parts/lean-footer'); ?>
  *
  * Settings used (Appearance > Lean Theme):
  *   - business_logo_url

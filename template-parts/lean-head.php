@@ -7,12 +7,12 @@
  *
  * Usage in page templates:
  *   <head>
- *   <?php get_template_part('template-parts/head'); ?>
+ *   <?php get_template_part('template-parts/lean-head'); ?>
  *   </head>
  *
  * Optional: Pass hero image via set_query_var before calling:
  *   set_query_var('lean_hero_image', $hero_image_array);
- *   get_template_part('template-parts/head');
+ *   get_template_part('template-parts/lean-head');
  */
 
 // Get hero image - check if passed via query var first, then try ACF
@@ -66,7 +66,7 @@ $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'
 <link rel="alternate" href="<?php echo esc_url($currentUrl); ?>" hreflang="en">
 <link rel="alternate" href="<?php echo esc_url($currentUrl); ?>" hreflang="x-default">
 
-<?php if (function_exists('pageone_output_seo_meta_tags')) pageone_output_seo_meta_tags(); ?>
+<?php if (function_exists('lean_output_seo_meta_tags')) lean_output_seo_meta_tags(); ?>
 
 <!-- Preload local Roboto -->
 <link rel="preload" href="<?php echo $theme_uri; ?>/assets/fonts/roboto/roboto-v49-latin-regular.woff2" as="font" type="font/woff2" crossorigin>

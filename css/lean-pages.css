@@ -4,3 +4,31 @@
  * Add page-specific styles here that aren't covered by
  * Bootstrap or the main style.css theme file.
  */
+
+/* ============================================================================
+   FONTS - Local Roboto
+   ============================================================================ */
+
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('../assets/fonts/roboto/roboto-v49-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('../assets/fonts/roboto/roboto-v49-latin-700.woff2') format('woff2');
+}
+
+/* ============================================================================
+   BASE TYPOGRAPHY
+   ============================================================================ */
+
+body {
+	font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}

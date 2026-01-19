@@ -29,17 +29,18 @@ require_once get_template_directory() . '/inc/sitemaps.php';
 require_once get_template_directory() . '/inc/disable-features.php';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// SHORTCODES
+// MIGRATIONS (remove after use)
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Blog: featured image, review notice, interlinks, latest post, template
-require_once get_template_directory() . '/inc/shortcodes/blog.php';
+// Yoast SEO → Lean SEO migration tool (Tools > Yoast → Lean SEO)
+// Comment out or delete after migration is complete
+require_once get_template_directory() . '/inc/migrations/yoast-to-lean-seo.php';
 
-// [testimonials] - Display testimonials with Schema.org markup
-require_once get_template_directory() . '/inc/shortcodes/testimonials.php';
+// ──────────────────────────────────────────────────────────────────────────────
+// SHORTCODES (modular loader - comment out individual files in shortcodes.php)
+// ──────────────────────────────────────────────────────────────────────────────
 
-// [map_embed] - Google Maps embed with GMB overlay
-require_once get_template_directory() . '/inc/shortcodes/maps.php';
+require_once get_template_directory() . '/inc/shortcodes.php';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // THEME SETUP

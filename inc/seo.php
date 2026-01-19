@@ -1,13 +1,15 @@
 <?php
 /**
- * Filename: page-meta-tags.php
+ * Filename: seo.php
  * Purpose: SEO meta fields admin UI + frontend output for lean templates
  *
  * Includes:
  * - Meta box for title, description, keywords, noindex/nofollow
  * - Admin columns + Quick Edit support
- * - Frontend output function: pageone_output_seo_meta_tags()
+ * - Frontend output function: lean_output_seo_meta_tags()
  * - Cleanup of WP default SEO cruft
+ *
+ * Note: Keywords meta tag retained for Bing compatibility
  */
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -48,9 +50,27 @@ add_filter('wp_robots', function($robots) {
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
-// FRONTEND OUTPUT: SEO Meta Tags (called directly in lean-head.php)
+// POST TYPES: Define which post types get SEO fields
 // ──────────────────────────────────────────────────────────────────────────────
-function pageone_output_seo_meta_tags() {
+
+/**
+ * Get post types that support SEO fields
+ * Use filter 'lean_seo_post_types' to add custom post types
+ *
+ * Example: add_filter('lean_seo_post_types', function($types) {
+ *     $types[] = 'service';
+ *     return $types;
+ * });
+ */
+function lean_seo_post_types() {
+	$default_types = ['post', 'page'];
+	return apply_filters('lean_seo_post_types', $default_types);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// FRONTEND OUTPUT: SEO Meta Tags (called directly in head.php)
+// ──────────────────────────────────────────────────────────────────────────────
+function lean_output_seo_meta_tags() {
 	if (!is_singular()) {
 		return;
 	}
@@ -58,11 +78,11 @@ function pageone_output_seo_meta_tags() {
 	global $post;
 
 	// Retrieve custom meta fields
-	$meta_title       = get_post_meta($post->ID, '_pageone_meta_title', true);
-	$meta_description = get_post_meta($post->ID, '_pageone_meta_description', true);
-	$meta_noindex     = get_post_meta($post->ID, '_pageone_meta_noindex', true);
-	$meta_nofollow    = get_post_meta($post->ID, '_pageone_meta_nofollow', true);
-	$meta_keywords    = get_post_meta($post->ID, '_pageone_meta_keywords', true);
+	$meta_title       = get_post_meta($post->ID, '_lean_meta_title', true);
+	$meta_description = get_post_meta($post->ID, '_lean_meta_description', true);
+	$meta_noindex     = get_post_meta($post->ID, '_lean_meta_noindex', true);
+	$meta_nofollow    = get_post_meta($post->ID, '_lean_meta_nofollow', true);
+	$meta_keywords    = get_post_meta($post->ID, '_lean_meta_keywords', true);
 
 	// Featured image and alt
 	$meta_image     = has_post_thumbnail($post->ID) ? get_the_post_thumbnail_url($post->ID, 'full') : '';
@@ -151,280 +171,290 @@ function pageone_output_seo_meta_tags() {
 // ADMIN: Meta Box for SEO Fields
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Add meta fields for title, description, noindex & nofollow
-function pageone_add_meta_seo_fields( $post ) {
-    wp_nonce_field( 'pageone_save_meta_seo_fields', 'pageone_seo_nonce' );
+function lean_add_meta_seo_fields($post) {
+	wp_nonce_field('lean_save_meta_seo_fields', 'lean_seo_nonce');
 
-    $meta_title       = get_post_meta( $post->ID, '_pageone_meta_title', true );
-    $meta_description = get_post_meta( $post->ID, '_pageone_meta_description', true );
-    $meta_noindex     = get_post_meta( $post->ID, '_pageone_meta_noindex', true );
-    $meta_nofollow    = get_post_meta( $post->ID, '_pageone_meta_nofollow', true );
-    $meta_keywords    = get_post_meta( $post->ID, '_pageone_meta_keywords', true );
-    ?>
-    <div class="postbox">
-      <h3>SEO Meta Settings</h3>
-      <div style="padding:10px;">
-        <label for="pageone_meta_title"><strong>Title</strong></label>
-        <input type="text" id="pageone_meta_title" name="pageone_meta_title"
-               value="<?php echo esc_attr( $meta_title ); ?>"
-               style="width:100%;margin:0.5em 0;">
+	$meta_title       = get_post_meta($post->ID, '_lean_meta_title', true);
+	$meta_description = get_post_meta($post->ID, '_lean_meta_description', true);
+	$meta_noindex     = get_post_meta($post->ID, '_lean_meta_noindex', true);
+	$meta_nofollow    = get_post_meta($post->ID, '_lean_meta_nofollow', true);
+	$meta_keywords    = get_post_meta($post->ID, '_lean_meta_keywords', true);
+	?>
+	<div class="postbox">
+		<h3>SEO Meta Settings</h3>
+		<div style="padding:10px;">
+			<label for="lean_meta_title"><strong>Title</strong></label>
+			<input type="text" id="lean_meta_title" name="lean_meta_title"
+				   value="<?php echo esc_attr($meta_title); ?>"
+				   style="width:100%;margin:0.5em 0;">
 
-        <label for="pageone_meta_description"><strong>Description</strong> (max 160 chars)</label>
-        <textarea id="pageone_meta_description" name="pageone_meta_description"
-                  rows="4" maxlength="160"
-                  style="width:100%;margin:0.5em 0;"><?php echo esc_textarea( $meta_description ); ?></textarea>
+			<label for="lean_meta_description"><strong>Description</strong> (max 160 chars)</label>
+			<textarea id="lean_meta_description" name="lean_meta_description"
+					  rows="4" maxlength="160"
+					  style="width:100%;margin:0.5em 0;"><?php echo esc_textarea($meta_description); ?></textarea>
 
-        <label for="pageone_meta_keywords"><strong>Keywords</strong> (comma‑separated)</label>
-        <input type="text" id="pageone_meta_keywords" name="pageone_meta_keywords"
-               value="<?php echo esc_attr( $meta_keywords ); ?>"
-               style="width:100%;margin:0.5em 0;">
+			<label for="lean_meta_keywords"><strong>Keywords</strong> (comma-separated, used by Bing)</label>
+			<input type="text" id="lean_meta_keywords" name="lean_meta_keywords"
+				   value="<?php echo esc_attr($meta_keywords); ?>"
+				   style="width:100%;margin:0.5em 0;">
 
-        <div style="margin-top:1em;">
-          <label>
-            <input type="checkbox" name="pageone_meta_noindex" value="1" <?php checked( $meta_noindex, '1' ); ?>>
-            Noindex
-          </label><br>
-          <label>
-            <input type="checkbox" name="pageone_meta_nofollow" value="1" <?php checked( $meta_nofollow, '1' ); ?>>
-            Nofollow
-          </label>
-        </div>
-      </div>
-    </div>
-    <?php
+			<div style="margin-top:1em;">
+				<label>
+					<input type="checkbox" name="lean_meta_noindex" value="1" <?php checked($meta_noindex, '1'); ?>>
+					Noindex
+				</label><br>
+				<label>
+					<input type="checkbox" name="lean_meta_nofollow" value="1" <?php checked($meta_nofollow, '1'); ?>>
+					Nofollow
+				</label>
+			</div>
+		</div>
+	</div>
+	<?php
 }
 
-// Define the post types here
-function pageone_seo_post_types() {
-    return ['post','page'];
+function lean_register_seo_meta_box() {
+	add_meta_box(
+		'lean_seo_meta_fields',
+		'SEO Settings',
+		'lean_add_meta_seo_fields',
+		lean_seo_post_types(),
+		'normal',
+		'default'
+	);
 }
-
-function pageone_register_meta_box() {
-    add_meta_box(
-        'pageone_seo_meta_fields',
-        'SEO Settings',
-        'pageone_add_meta_seo_fields',
-        pageone_seo_post_types(),
-        'normal',
-        'default'
-    );
-}
-add_action( 'add_meta_boxes', 'pageone_register_meta_box' );
+add_action('add_meta_boxes', 'lean_register_seo_meta_box');
 
 /**
- * Save PageOne SEO fields on both normal save and Quick Edit.
+ * Save SEO fields on both normal save and Quick Edit.
  */
-add_action( 'save_post', 'pageone_save_seo_fields_quick_and_normal', 10, 3 );
-function pageone_save_seo_fields_quick_and_normal( $post_id, $post, $update ) {
+add_action('save_post', 'lean_save_seo_fields', 10, 3);
+function lean_save_seo_fields($post_id, $post, $update) {
 	// 1) Bail on autosave/revision
-	if ( wp_is_post_autosave( $post_id ) || wp_is_post_revision( $post_id ) ) return;
+	if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) return;
 
 	// 2) Only for our post types
-	if ( ! in_array( $post->post_type, pageone_seo_post_types(), true ) ) return;
+	if (!in_array($post->post_type, lean_seo_post_types(), true)) return;
 
 	// 3) Capability
-	if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+	if (!current_user_can('edit_post', $post_id)) return;
 
 	// 4) Accept either: meta box nonce OR Quick Edit nonce
-	$has_metabox_nonce = isset( $_POST['pageone_seo_nonce'] ) && wp_verify_nonce( $_POST['pageone_seo_nonce'], 'pageone_save_meta_seo_fields' );
-	$has_quickedit_nonce = isset( $_POST['_inline_edit'] ) && wp_verify_nonce( $_POST['_inline_edit'], 'inlineeditnonce' );
+	$has_metabox_nonce = isset($_POST['lean_seo_nonce']) && wp_verify_nonce($_POST['lean_seo_nonce'], 'lean_save_meta_seo_fields');
+	$has_quickedit_nonce = isset($_POST['_inline_edit']) && wp_verify_nonce($_POST['_inline_edit'], 'inlineeditnonce');
 
-	if ( ! $has_metabox_nonce && ! $has_quickedit_nonce ) return;
+	if (!$has_metabox_nonce && !$has_quickedit_nonce) return;
 
 	// 5) Save fields
-	if ( isset( $_POST['pageone_meta_title'] ) ) {
-		update_post_meta( $post_id, '_pageone_meta_title', sanitize_text_field( wp_unslash( $_POST['pageone_meta_title'] ) ) );
+	if (isset($_POST['lean_meta_title'])) {
+		update_post_meta($post_id, '_lean_meta_title', sanitize_text_field(wp_unslash($_POST['lean_meta_title'])));
 	}
 
-	if ( isset( $_POST['pageone_meta_description'] ) ) {
-		update_post_meta( $post_id, '_pageone_meta_description', sanitize_textarea_field( wp_unslash( $_POST['pageone_meta_description'] ) ) );
+	if (isset($_POST['lean_meta_description'])) {
+		update_post_meta($post_id, '_lean_meta_description', sanitize_textarea_field(wp_unslash($_POST['lean_meta_description'])));
 	}
 
-	if ( isset( $_POST['pageone_meta_keywords'] ) ) {
-		$kw  = (string) wp_unslash( $_POST['pageone_meta_keywords'] );
-		$arr = array_filter( array_map( 'sanitize_text_field', array_map( 'trim', explode( ',', $kw ) ) ) );
-		update_post_meta( $post_id, '_pageone_meta_keywords', implode( ', ', $arr ) );
+	if (isset($_POST['lean_meta_keywords'])) {
+		$kw  = (string) wp_unslash($_POST['lean_meta_keywords']);
+		$arr = array_filter(array_map('sanitize_text_field', array_map('trim', explode(',', $kw))));
+		update_post_meta($post_id, '_lean_meta_keywords', implode(', ', $arr));
 	}
 
-	update_post_meta( $post_id, '_pageone_meta_noindex',  isset( $_POST['pageone_meta_noindex'] )  ? '1' : '' );
-	update_post_meta( $post_id, '_pageone_meta_nofollow', isset( $_POST['pageone_meta_nofollow'] ) ? '1' : '' );
+	update_post_meta($post_id, '_lean_meta_noindex', isset($_POST['lean_meta_noindex']) ? '1' : '');
+	update_post_meta($post_id, '_lean_meta_nofollow', isset($_POST['lean_meta_nofollow']) ? '1' : '');
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ADMIN LIST SCREEN COLUMNS
 // ──────────────────────────────────────────────────────────────────────────────
-function pageone_add_seo_columns( $cols ) {
-    $new = [];
-    foreach ( $cols as $key => $label ) {
-        $new[$key] = $label;
-        if ( $key === 'title' ) {
-            $new['seo_title']       = 'SEO Title';
-            $new['seo_description'] = 'SEO Description';
-            $new['seo_keywords']    = 'Keywords';
-            $new['seo_robots']      = 'SEO Robots';
-        }
-    }
-    return $new;
+function lean_add_seo_columns($cols) {
+	$new = [];
+	foreach ($cols as $key => $label) {
+		$new[$key] = $label;
+		if ($key === 'title') {
+			$new['seo_title']       = 'SEO Title';
+			$new['seo_description'] = 'SEO Description';
+			$new['seo_keywords']    = 'Keywords';
+			$new['seo_robots']      = 'SEO Robots';
+		}
+	}
+	return $new;
 }
-add_filter('manage_post_posts_columns', 'pageone_add_seo_columns');          // blog posts
-add_filter('manage_pages_columns',      'pageone_add_seo_columns');          // pages
 
-function pageone_populate_seo_columns( $column, $post_id ) {
-    switch ( $column ) {
-        case 'seo_title':
-            $val = get_post_meta( $post_id, '_pageone_meta_title', true );
-            echo '<span data-full-value="'.esc_attr($val).'">'.( $val ? esc_html($val) : '<em>Not set</em>' ).'</span>';
-            break;
-        case 'seo_description':
-            $val = get_post_meta( $post_id, '_pageone_meta_description', true );
-            $out = $val
-                 ? ( strlen($val) > 50 ? esc_html(substr($val,0,50)).'...' : esc_html($val) )
-                 : '<em>Not set</em>';
-            echo '<span data-full-value="'.esc_attr($val).'">'.$out.'</span>';
-            break;
-        case 'seo_keywords':
-            $val = get_post_meta( $post_id, '_pageone_meta_keywords', true );
-            echo '<span data-full-value="'.esc_attr($val).'">'.( $val ? esc_html($val) : '<em>Not set</em>' ).'</span>';
-            break;
-        case 'seo_robots':
-            $noindex  = get_post_meta( $post_id, '_pageone_meta_noindex', true );
-            $nofollow = get_post_meta( $post_id, '_pageone_meta_nofollow', true );
-            $robots   = [];
-            if ( $noindex )  $robots[] = 'noindex';
-            if ( $nofollow ) $robots[] = 'nofollow';
-            echo '<span data-noindex="'.($noindex?'1':'0').'" data-nofollow="'.($nofollow?'1':'0').'">'
-               . ( $robots ? esc_html(implode(', ',$robots)) : 'index, follow' )
-               . '</span>';
-            break;
-    }
-}
-add_action( 'manage_post_posts_custom_column', 'pageone_populate_seo_columns', 10, 2);
-add_action( 'manage_pages_custom_column', 'pageone_populate_seo_columns', 10, 2 );
+// Register columns for all SEO-enabled post types
+add_action('admin_init', function() {
+	foreach (lean_seo_post_types() as $post_type) {
+		if ($post_type === 'page') {
+			add_filter('manage_pages_columns', 'lean_add_seo_columns');
+			add_action('manage_pages_custom_column', 'lean_populate_seo_columns', 10, 2);
+			add_filter('manage_edit-page_sortable_columns', 'lean_make_seo_columns_sortable');
+		} else {
+			add_filter("manage_{$post_type}_posts_columns", 'lean_add_seo_columns');
+			add_action("manage_{$post_type}_posts_custom_column", 'lean_populate_seo_columns', 10, 2);
+			add_filter("manage_edit-{$post_type}_sortable_columns", 'lean_make_seo_columns_sortable');
+		}
+	}
+});
 
-function pageone_make_seo_columns_sortable( $cols ) {
-    $cols['seo_title']       = 'seo_title';
-    $cols['seo_description'] = 'seo_description';
-    $cols['seo_keywords']    = 'seo_keywords';
-    $cols['seo_robots']      = 'seo_robots';
-    return $cols;
+function lean_populate_seo_columns($column, $post_id) {
+	switch ($column) {
+		case 'seo_title':
+			$val = get_post_meta($post_id, '_lean_meta_title', true);
+			echo '<span data-full-value="' . esc_attr($val) . '">' . ($val ? esc_html($val) : '<em>Not set</em>') . '</span>';
+			break;
+		case 'seo_description':
+			$val = get_post_meta($post_id, '_lean_meta_description', true);
+			$out = $val
+				? (strlen($val) > 50 ? esc_html(substr($val, 0, 50)) . '...' : esc_html($val))
+				: '<em>Not set</em>';
+			echo '<span data-full-value="' . esc_attr($val) . '">' . $out . '</span>';
+			break;
+		case 'seo_keywords':
+			$val = get_post_meta($post_id, '_lean_meta_keywords', true);
+			echo '<span data-full-value="' . esc_attr($val) . '">' . ($val ? esc_html($val) : '<em>Not set</em>') . '</span>';
+			break;
+		case 'seo_robots':
+			$noindex  = get_post_meta($post_id, '_lean_meta_noindex', true);
+			$nofollow = get_post_meta($post_id, '_lean_meta_nofollow', true);
+			$robots   = [];
+			if ($noindex) $robots[] = 'noindex';
+			if ($nofollow) $robots[] = 'nofollow';
+			echo '<span data-noindex="' . ($noindex ? '1' : '0') . '" data-nofollow="' . ($nofollow ? '1' : '0') . '">'
+				. ($robots ? esc_html(implode(', ', $robots)) : 'index, follow')
+				. '</span>';
+			break;
+	}
 }
-add_filter( 'manage_edit-post_sortable_columns', 'pageone_make_seo_columns_sortable' );
-add_filter( 'manage_edit-page_sortable_columns', 'pageone_make_seo_columns_sortable' );
 
-function pageone_handle_seo_column_sorting( $query ) {
-    if ( is_admin() && $query->is_main_query() ) {
-        switch ( $query->get('orderby') ) {
-            case 'seo_title':
-                $query->set('meta_key','_pageone_meta_title');
-                $query->set('orderby','meta_value');
-                break;
-            case 'seo_description':
-                $query->set('meta_key','_pageone_meta_description');
-                $query->set('orderby','meta_value');
-                break;
-            case 'seo_keywords':
-                $query->set('meta_key','_pageone_meta_keywords');
-                $query->set('orderby','meta_value');
-                break;
-            case 'seo_robots':
-                $query->set('meta_key','_pageone_meta_noindex');
-                $query->set('orderby','meta_value');
-                break;
-        }
-    }
+function lean_make_seo_columns_sortable($cols) {
+	$cols['seo_title']       = 'seo_title';
+	$cols['seo_description'] = 'seo_description';
+	$cols['seo_keywords']    = 'seo_keywords';
+	$cols['seo_robots']      = 'seo_robots';
+	return $cols;
 }
-add_action( 'pre_get_posts', 'pageone_handle_seo_column_sorting' );
+
+function lean_handle_seo_column_sorting($query) {
+	if (is_admin() && $query->is_main_query()) {
+		switch ($query->get('orderby')) {
+			case 'seo_title':
+				$query->set('meta_key', '_lean_meta_title');
+				$query->set('orderby', 'meta_value');
+				break;
+			case 'seo_description':
+				$query->set('meta_key', '_lean_meta_description');
+				$query->set('orderby', 'meta_value');
+				break;
+			case 'seo_keywords':
+				$query->set('meta_key', '_lean_meta_keywords');
+				$query->set('orderby', 'meta_value');
+				break;
+			case 'seo_robots':
+				$query->set('meta_key', '_lean_meta_noindex');
+				$query->set('orderby', 'meta_value');
+				break;
+		}
+	}
+}
+add_action('pre_get_posts', 'lean_handle_seo_column_sorting');
 
 // ──────────────────────────────────────────────────────────────────────────────
 // QUICK EDIT SUPPORT
 // ──────────────────────────────────────────────────────────────────────────────
-function pageone_add_quick_edit_fields( $column_name, $post_type ) {
-	if ( ! in_array( $post_type, pageone_seo_post_types(), true ) ) return;
+function lean_add_quick_edit_fields($column_name, $post_type) {
+	if (!in_array($post_type, lean_seo_post_types(), true)) return;
 	static $done = false;
-    if ( $done ) return;
-    $done = true;
-    ?>
-    <fieldset class="inline-edit-col-right">
-      <div class="inline-edit-col">
-        <h4>SEO Settings</h4>
-        <label><span class="title">Title</span>
-          <span class="input-text-wrap">
-            <input type="text" name="pageone_meta_title" class="pageone_meta_title">
-          </span>
-        </label>
-        <label><span class="title">Description</span>
-          <span class="input-text-wrap">
-            <textarea name="pageone_meta_description" class="pageone_meta_description" rows="3"></textarea>
-          </span>
-        </label>
-        <label><span class="title">Keywords</span>
-          <span class="input-text-wrap">
-            <input type="text" name="pageone_meta_keywords" class="pageone_meta_keywords" placeholder="Comma‑separated">
-          </span>
-        </label>
-        <div class="inline-edit-group">
-          <label class="alignleft">
-            <input type="checkbox" name="pageone_meta_noindex" class="pageone_meta_noindex" value="1">
-            <span class="checkbox-title">Noindex</span>
-          </label>
-          <label class="alignleft">
-            <input type="checkbox" name="pageone_meta_nofollow" class="pageone_meta_nofollow" value="1">
-            <span class="checkbox-title">Nofollow</span>
-          </label>
-        </div>
-      </div>
-    </fieldset>
-    <?php
+	if ($done) return;
+	$done = true;
+	?>
+	<fieldset class="inline-edit-col-right">
+		<div class="inline-edit-col">
+			<h4>SEO Settings</h4>
+			<label><span class="title">Title</span>
+				<span class="input-text-wrap">
+					<input type="text" name="lean_meta_title" class="lean_meta_title">
+				</span>
+			</label>
+			<label><span class="title">Description</span>
+				<span class="input-text-wrap">
+					<textarea name="lean_meta_description" class="lean_meta_description" rows="3"></textarea>
+				</span>
+			</label>
+			<label><span class="title">Keywords</span>
+				<span class="input-text-wrap">
+					<input type="text" name="lean_meta_keywords" class="lean_meta_keywords" placeholder="Comma-separated">
+				</span>
+			</label>
+			<div class="inline-edit-group">
+				<label class="alignleft">
+					<input type="checkbox" name="lean_meta_noindex" class="lean_meta_noindex" value="1">
+					<span class="checkbox-title">Noindex</span>
+				</label>
+				<label class="alignleft">
+					<input type="checkbox" name="lean_meta_nofollow" class="lean_meta_nofollow" value="1">
+					<span class="checkbox-title">Nofollow</span>
+				</label>
+			</div>
+		</div>
+	</fieldset>
+	<?php
 }
-add_action( 'quick_edit_custom_box', 'pageone_add_quick_edit_fields', 10, 2 );
+add_action('quick_edit_custom_box', 'lean_add_quick_edit_fields', 10, 2);
 
-function pageone_admin_footer_script() {
-    $screen = get_current_screen();
-    if ( ! in_array( $screen->id, ['edit-post','edit-page'], true ) ) return;	
-	
-    ?>
-    <script type="text/javascript">
-    jQuery(function($){
-      $('body').on('click','.editinline',function(){
-        var id = $(this).closest('tr').attr('id').replace('post-','');
-        if (!id||isNaN(id)) return;
-        var row = $('#post-'+id);
-        var title = row.find('.column-seo_title span').attr('data-full-value') || '';
-        var desc  = row.find('.column-seo_description span').attr('data-full-value') || '';
-        var keys  = row.find('.column-seo_keywords span').attr('data-full-value') || '';
-        var rspan = row.find('.column-seo_robots span');
-        var noindex  = (rspan.attr('data-noindex')==='1');
-        var nofollow = (rspan.attr('data-nofollow')==='1');
-        $('.pageone_meta_title').val(title);
-        $('.pageone_meta_description').val(desc);
-        $('.pageone_meta_keywords').val(keys);
-        $('.pageone_meta_noindex').prop('checked', noindex);
-        $('.pageone_meta_nofollow').prop('checked', nofollow);
-      });
-    });
-    </script>
-    <?php
+function lean_admin_footer_script() {
+	$screen = get_current_screen();
+	$seo_screens = array_map(function($type) {
+		return $type === 'page' ? 'edit-page' : "edit-{$type}";
+	}, lean_seo_post_types());
+
+	if (!in_array($screen->id, $seo_screens, true)) return;
+
+	?>
+	<script type="text/javascript">
+	jQuery(function($){
+		$('body').on('click', '.editinline', function(){
+			var id = $(this).closest('tr').attr('id').replace('post-', '');
+			if (!id || isNaN(id)) return;
+			var row = $('#post-' + id);
+			var title = row.find('.column-seo_title span').attr('data-full-value') || '';
+			var desc  = row.find('.column-seo_description span').attr('data-full-value') || '';
+			var keys  = row.find('.column-seo_keywords span').attr('data-full-value') || '';
+			var rspan = row.find('.column-seo_robots span');
+			var noindex  = (rspan.attr('data-noindex') === '1');
+			var nofollow = (rspan.attr('data-nofollow') === '1');
+			$('.lean_meta_title').val(title);
+			$('.lean_meta_description').val(desc);
+			$('.lean_meta_keywords').val(keys);
+			$('.lean_meta_noindex').prop('checked', noindex);
+			$('.lean_meta_nofollow').prop('checked', nofollow);
+		});
+	});
+	</script>
+	<?php
 }
-add_action( 'admin_footer', 'pageone_admin_footer_script' );
-
+add_action('admin_footer', 'lean_admin_footer_script');
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ADMIN CSS
 // ──────────────────────────────────────────────────────────────────────────────
-function pageone_admin_css() {
+function lean_seo_admin_css() {
 	$screen = get_current_screen();
-	if ( ! in_array( $screen->id, ['edit-post','edit-page'], true ) ) return;
+	$seo_screens = array_map(function($type) {
+		return $type === 'page' ? 'edit-page' : "edit-{$type}";
+	}, lean_seo_post_types());
 
-?>
-    <style>
-    .column-seo_title,
-    .column-seo_description,
-    .column-seo_keywords { width:15%; }
-    .column-seo_robots               { width:10%; }
-    .column-seo_description           { max-width:200px; word-wrap:break-word; }
-    .inline-edit-col h4               { margin:0.2em 0; }
-    .inline-edit-group .alignleft     { margin-right:15px; }
-    </style>
-    <?php
+	if (!in_array($screen->id, $seo_screens, true)) return;
+
+	?>
+	<style>
+	.column-seo_title,
+	.column-seo_description,
+	.column-seo_keywords { width: 15%; }
+	.column-seo_robots { width: 10%; }
+	.column-seo_description { max-width: 200px; word-wrap: break-word; }
+	.inline-edit-col h4 { margin: 0.2em 0; }
+	.inline-edit-group .alignleft { margin-right: 15px; }
+	</style>
+	<?php
 }
-add_action( 'admin_head', 'pageone_admin_css' );
+add_action('admin_head', 'lean_seo_admin_css');

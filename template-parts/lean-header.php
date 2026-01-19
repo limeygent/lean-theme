@@ -6,7 +6,7 @@
  * Includes: Google Analytics, skip link, and full header.
  *
  * Usage in page templates (after <body> tag):
- *   <?php get_template_part('template-parts/header'); ?>
+ *   <?php get_template_part('template-parts/lean-header'); ?>
  *
  * Settings used (Appearance > Lean Theme):
  *   - ga4_measurement_id
