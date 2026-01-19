@@ -1,5 +1,73 @@
 # Lean Theme Session Log
 
+## Session: 2026-01-19
+
+### Summary
+Major refactor for modular architecture and Avada child theme compatibility. Created standalone Code Snippets for SEO functionality. Ran Yoast → Lean SEO migration.
+
+### Files Modified & Pushed to GitHub (v1.2.0)
+
+| File | Changes |
+|------|---------|
+| `bad-ass-optimized.php` | NEW - Page template at root level (matches Avada child) |
+| `functions.php` | Added shortcodes loader, migrations include |
+| `inc/shortcodes.php` | NEW - Modular shortcode loader |
+| `inc/shortcodes/business-info.php` | NEW - Business info shortcodes |
+| `inc/shortcodes/faqs.php` | NEW - FAQ shortcode |
+| `inc/shortcodes/maps.php` | DELETED - Removed per request |
+| `inc/seo.php` | Refactored: pageone_ → lean_ prefix, filterable post types |
+| `inc/settings.php` | Removed shortcodes (moved to modular files) |
+| `inc/migrations/yoast-to-lean-seo.php` | NEW - Theme-based Yoast migration |
+| `css/lean-pages.css` | Added @font-face rules for Roboto (400, 700) |
+| `template-parts/lean-head.php` | RENAMED from head.php |
+| `template-parts/lean-header.php` | RENAMED from header.php |
+| `template-parts/lean-footer.php` | RENAMED from footer.php |
+| `template-parts/page-lean.php` | Updated to use lean-* template parts |
+
+### Code Snippets Created
+For standalone use with Avada child theme (before full theme switch):
+
+| File | Purpose | Run Where |
+|------|---------|-----------|
+| `code-snippets/1-lean-seo-admin.php` | SEO meta box in page editor | Admin only |
+| `code-snippets/2-lean-seo-output.php` | Output meta tags in `<head>` | Everywhere |
+| `code-snippets/3-lean-seo-migration.php` | Yoast → Lean migration tool | Admin only (one-time) |
+
+### Template Parts Renamed
+Changed to `lean-*` prefix for Avada child theme compatibility:
+- `head.php` → `lean-head.php`
+- `header.php` → `lean-header.php`
+- `footer.php` → `lean-footer.php`
+
+### Shortcodes Now Modular
+```
+inc/shortcodes.php          ← Loader (comment out to disable)
+inc/shortcodes/
+├── business-info.php       ← [business_name], [business_phone], etc.
+├── blog.php                ← [blog_featured_image], [blog_review_notice], etc.
+├── faqs.php                ← [faq_list]
+└── testimonials.php        ← [testimonials]
+```
+
+### SEO Refactor
+- Function prefix: `pageone_` → `lean_`
+- Meta keys: `_pageone_meta_*` → `_lean_meta_*`
+- Post types now filterable via `lean_seo_post_types` filter
+- Keywords retained for Bing compatibility
+
+### Yoast Migration
+- Ran migration via Tools > Yoast → Lean SEO
+- All Yoast data copied to Lean meta fields
+- Migration Code Snippet can be disabled after verification
+
+### GitHub Status
+- Repo: https://github.com/limeygent/lean-theme
+- Latest commit: add4eb3
+- Version: 1.2.0
+- Branch: main
+
+---
+
 ## Session: 2026-01-15
 
 ### Summary
@@ -34,74 +102,49 @@ Updated the GitHub repo (https://github.com/limeygent/lean-theme) with all enhan
 ### New Shortcodes
 - `[business_phone_url]` - Returns just the tel: URL
 
-### GitHub Status
-- Repo: https://github.com/limeygent/lean-theme
-- Latest commit: f894ebe
-- Branch: main
-- All changes pushed successfully
-
 ---
 
-## Migration Strategy (Discussed)
+## Current Setup (Executive Blue Pools Site)
 
-### User's Situation
-- Two sites to convert to lean-theme:
-  1. Site with Avada theme
-  2. Site with custom theme based on Twenty Eighteen
-- Both have 100s of pages/posts
-- Need gradual migration, not big-bang switch
+### Active Theme: Avada Child
+```
+avada-child/
+├── bad-ass-optimized.php         ← Page template
+├── template-parts/
+│   ├── lean-head.php
+│   ├── lean-header.php
+│   └── lean-footer.php
+├── css/
+│   ├── bootstrap.css
+│   └── lean-pages.css
+└── assets/
+    └── fonts/
+        └── roboto/
+            ├── roboto-v49-latin-regular.woff2
+            └── roboto-v49-latin-700.woff2
+```
 
-### Agreed Approach
-1. **Add Code Snippets** (theme-independent, stored in DB)
-   - Business settings admin page
-   - All shortcodes
-   - These persist across theme changes
+### Code Snippets Active
+1. Business Settings (Appearance > Business Information)
+2. Business Shortcodes
+3. Lean SEO Admin
+4. Lean SEO Output
+5. ~~Yoast Migration~~ (disable after use)
 
-2. **Add template files to current theme:**
-   ```
-   current-theme/
-   ├── template-parts/
-   │   ├── page-lean.php
-   │   ├── head.php
-   │   ├── header.php
-   │   └── footer.php
-   └── css/
-       ├── bootstrap.css
-       └── lean-pages.css
-   ```
-
-3. **Migrate pages one by one:**
-   - Edit page → Page Attributes → Template → "Lean Theme"
-   - Test, fix issues, repeat
-
-4. **Final switch:**
-   - Appearance → Themes → Activate "Lean Theme"
-   - Template assignments persist (same path: `template-parts/page-lean.php`)
-   - Code snippets keep working
-   - Optionally deactivate duplicate snippets since theme includes same functionality
-
-### Key Points
-- Code Snippets plugin = theme-independent (database, not files)
-- Template path must match between old theme and lean-theme for seamless switch
-- Settings stored as WordPress options - persist across everything
+### SEO Status
+- Yoast still active (for legacy pages)
+- Lean SEO working on "Bad Ass Optimized" template pages
+- Migration complete - data in `_lean_meta_*` fields
 
 ---
 
 ## Next Steps
-1. Add template files + CSS to the Avada site (or child theme)
-2. Add template files + CSS to the Twenty Eighteen-based site
-3. Configure Code Snippets on both sites
-4. Begin gradual page migration
-5. Final theme switch when ready
+1. Continue migrating pages to "Bad Ass Optimized" template
+2. Test thoroughly
+3. Deactivate Yoast when confident
+4. Eventually switch to lean-theme as active theme
+5. Disable duplicate Code Snippets (theme has same functionality)
 
 ---
 
-## Related Files (Avada Child Theme Work)
-Located in: `/Users/nomis/Desktop/executive blue pools/avada-child-theme/`
-- `code-snippets/1-business-settings-admin.php`
-- `code-snippets/2-business-shortcodes.php`
-- Template files mirror the lean-theme structure
-
----
-
-*Last Updated: 2026-01-15*
+*Last Updated: 2026-01-19*
