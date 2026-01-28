@@ -3,7 +3,7 @@
  * Filename: settings.php
  * Purpose: Lean Theme settings page and shortcodes
  *
- * Creates: Appearance > Lean Theme Settings
+ * Creates: Theme Settings (top-level menu below Dashboard)
  * Includes all business info, analytics, form settings, and shortcodes
  */
 
@@ -14,12 +14,14 @@
 add_action('admin_menu', 'lean_theme_add_settings_page');
 
 function lean_theme_add_settings_page() {
-	add_theme_page(
-		'Lean Theme Settings',
-		'Lean Theme',
-		'manage_options',
-		'lean-theme-settings',
-		'lean_theme_settings_page'
+	add_menu_page(
+		'Theme Settings',           // Page title
+		'Theme Settings',           // Menu title
+		'manage_options',           // Capability
+		'lean-theme-settings',      // Menu slug
+		'lean_theme_settings_page', // Callback function
+		'dashicons-admin-customizer', // Icon
+		2.1                         // Position (after Dashboard at 2, before other items at 3+)
 	);
 }
 
@@ -258,6 +260,28 @@ function lean_theme_appearance_fields() {
 
 	<tr><td colspan="2"><h2>Header Navigation</h2></td></tr>
 	<tr>
+		<th scope="row"><label for="lean_menu_location">Menu Location</label></th>
+		<td>
+			<select name="lean_menu_location" id="lean_menu_location">
+				<option value="">-- Select Menu Location --</option>
+				<?php
+				$current_location = get_option('lean_menu_location', '');
+				$locations = get_registered_nav_menus();
+				foreach ($locations as $slug => $name) {
+					printf(
+						'<option value="%s" %s>%s (%s)</option>',
+						esc_attr($slug),
+						selected($current_location, $slug, false),
+						esc_html($name),
+						esc_html($slug)
+					);
+				}
+				?>
+			</select>
+			<p class="description">Select which menu location to use for the main navigation</p>
+		</td>
+	</tr>
+	<tr>
 		<th scope="row"><label for="header_main_bg">Header Background</label></th>
 		<td><input type="text" name="header_main_bg" id="header_main_bg" value="<?php echo esc_attr(get_option('header_main_bg', '#ffffff')); ?>" class="regular-text" placeholder="#ffffff"></td>
 	</tr>
@@ -304,11 +328,21 @@ function lean_theme_appearance_fields() {
 
 function lean_theme_analytics_fields() {
 	?>
+	<tr><td colspan="2"><h2>Google Tag Manager</h2><p class="description">Use GTM if you manage all tags through Tag Manager. Leave empty if using GA4 directly.</p></td></tr>
+	<tr>
+		<th scope="row"><label for="gtm_container_id">GTM Container ID</label></th>
+		<td>
+			<input type="text" name="gtm_container_id" id="gtm_container_id" value="<?php echo esc_attr(get_option('gtm_container_id', '')); ?>" class="regular-text" placeholder="GTM-XXXXXXX">
+			<p class="description">Your Google Tag Manager Container ID (starts with GTM-). If set, GA4 below will be ignored.</p>
+		</td>
+	</tr>
+
+	<tr><td colspan="2"><h2>Direct Analytics</h2><p class="description">Use these if NOT using Google Tag Manager.</p></td></tr>
 	<tr>
 		<th scope="row"><label for="ga4_measurement_id">GA4 Measurement ID</label></th>
 		<td>
 			<input type="text" name="ga4_measurement_id" id="ga4_measurement_id" value="<?php echo esc_attr(get_option('ga4_measurement_id', '')); ?>" class="regular-text" placeholder="G-XXXXXXXXXX">
-			<p class="description">Your Google Analytics 4 Measurement ID (starts with G-)</p>
+			<p class="description">Your Google Analytics 4 Measurement ID (starts with G-). Ignored if GTM is set.</p>
 		</td>
 	</tr>
 	<tr>
@@ -417,8 +451,9 @@ function lean_theme_save_settings() {
 	$text_fields = array(
 		'business_name', 'header_tagline', 'business_phone', 'business_address',
 		'business_city', 'business_state', 'business_zip', 'service_area', 'service_area_url',
-		'google_maps_cid', 'google_kgid', 'ga4_measurement_id', 'clarity_project_id',
+		'google_maps_cid', 'google_kgid', 'gtm_container_id', 'ga4_measurement_id', 'clarity_project_id',
 		'primary_color', 'secondary_color',
+		'lean_menu_location',
 		'header_top_mode', 'header_top_bg', 'header_top_text',
 		'header_main_bg', 'header_nav_text', 'dropdown_bg', 'dropdown_text',
 		'footer_bg', 'footer_text',

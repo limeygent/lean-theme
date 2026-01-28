@@ -15,10 +15,40 @@ A lightweight, performance-optimized WordPress theme that bypasses `wp_head()` f
 
 ## Installation
 
+### Option A: Standalone Theme (Greenfield Sites)
+
 1. Download or clone this repository
 2. Upload to `/wp-content/themes/lean-theme/`
 3. Activate in **Appearance > Themes**
 4. Configure settings in **Appearance > Lean Theme**
+
+### Option B: Add to Existing Theme
+
+1. Download or clone this repository
+2. Copy contents into a subfolder of your theme: `/wp-content/themes/your-theme/lean/`
+3. Add this line to your theme's `functions.php`:
+
+```php
+require_once get_template_directory() . '/lean/lean-loader.php';
+```
+
+4. Configure settings in **Appearance > Lean Theme**
+5. Edit individual pages and select **"Lean Page"** from the Template dropdown to migrate them
+
+**Example structure after integration:**
+```
+your-theme/
+├── functions.php      # Add the require_once line
+├── style.css          # Your existing styles
+├── ... other files    # Your existing theme files
+└── lean/              # Lean subfolder
+    ├── lean-loader.php
+    ├── inc/
+    ├── template-parts/
+    └── css/
+```
+
+**Note:** When used with an existing theme, Lean provides all functionality (SEO, forms, shortcodes, settings) without overriding your theme's templates or navigation menus. Migrate pages gradually by changing their template.
 
 ## Settings
 
@@ -101,9 +131,10 @@ For optimized pages, use the Lean template (`templates/page-lean.php`) which:
 
 ```
 lean-theme/
-├── functions.php       # Loader
+├── lean-loader.php     # Main loader (include this from existing themes)
+├── functions.php       # Standalone theme entry point
 ├── style.css           # Theme declaration + styles
-├── index.php           # Fallback template
+├── index.php           # Fallback template (required by WP)
 ├── assets/
 │   └── fonts/
 │       └── roboto/     # Self-hosted Roboto fonts

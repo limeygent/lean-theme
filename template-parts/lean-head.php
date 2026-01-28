@@ -21,24 +21,45 @@ if (!$hero_image && function_exists('get_field')) {
 	$hero_image = get_field('hero_background_image');
 }
 
-// Theme paths
-$theme_uri = get_template_directory_uri();
+// Theme paths - use LEAN constants for correct paths in both standalone and integrated modes
+$theme_uri = defined('LEAN_THEME_URL') ? LEAN_THEME_URL : get_template_directory_uri();
 $theme_rel = wp_make_link_relative($theme_uri);
-$theme_dir = get_template_directory();
+$theme_dir = defined('LEAN_THEME_DIR') ? LEAN_THEME_DIR : get_template_directory();
 
-// CSS version for cache busting
+// CSS version for cache busting (uses file modification time)
+$bootstrap_css_path = $theme_dir . '/css/bootstrap.css';
+$bootstrap_css_ver = file_exists($bootstrap_css_path) ? filemtime($bootstrap_css_path) : time();
+
 $lean_css_path = $theme_dir . '/css/lean-pages.css';
 $lean_css_ver = file_exists($lean_css_path) ? filemtime($lean_css_path) : time();
 
+$fa_css_path = $theme_dir . '/css/fontawesome-minimal.css';
+$fa_css_ver = file_exists($fa_css_path) ? filemtime($fa_css_path) : time();
+
 // Analytics IDs
+$gtm_id = get_option('gtm_container_id', '');
 $clarity_id = get_option('clarity_project_id', '');
 ?>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="#025592" />
 
-<?php if ($clarity_id): ?>
+<?php if ($gtm_id): ?>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','<?php echo esc_js($gtm_id); ?>');</script>
+<!-- End Google Tag Manager -->
+<?php endif; ?>
+
 <!-- Performance hints -->
+<?php if ($gtm_id): ?>
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<?php endif; ?>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<?php if ($clarity_id): ?>
 <link rel="dns-prefetch" href="https://www.clarity.ms">
 <?php endif; ?>
 
@@ -78,15 +99,16 @@ $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'
 <?php endif; ?>
 
 <!-- Preload CSS files for parallel download -->
-<link rel="preload" href="<?php echo $theme_rel; ?>/css/bootstrap.css?ver=1.1" as="style">
-<link rel="preload" href="<?php echo $theme_rel; ?>/style.css?ver=1.667" as="style">
+<link rel="preload" href="<?php echo $theme_rel; ?>/css/bootstrap.css?ver=<?php echo $bootstrap_css_ver; ?>" as="style">
 <link rel="preload" href="<?php echo $theme_rel; ?>/css/lean-pages.css?ver=<?php echo $lean_css_ver; ?>" as="style">
+<link rel="preload" href="<?php echo $theme_rel; ?>/css/fontawesome-minimal.css?ver=<?php echo $fa_css_ver; ?>" as="style">
 
 <!-- Apply stylesheets (blocking for FOUC prevention) -->
-<link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/bootstrap.css?ver=1.1">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link rel="stylesheet" href="<?php echo $theme_rel; ?>/style.css?ver=1.667">
+<link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/bootstrap.css?ver=<?php echo $bootstrap_css_ver; ?>">
 <link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/lean-pages.css?ver=<?php echo $lean_css_ver; ?>">
+
+<!-- Font Awesome (minimal subset - ~4KB vs 18KB) -->
+<link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/fontawesome-minimal.css?ver=<?php echo $fa_css_ver; ?>">
 
 <?php if ($clarity_id): ?>
 <!-- MS Clarity -->

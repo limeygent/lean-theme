@@ -1,0 +1,286 @@
+/**
+ * Font Awesome 6 - Minimal Subset
+ * Only includes commonly used icons for business websites
+ * Full version: 18+ KiB | This version: ~4 KiB
+ */
+
+/* ==========================================================================
+   Font Face Declarations
+   ========================================================================== */
+
+@font-face {
+	font-family: 'Font Awesome 6 Free';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-regular-400.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Font Awesome 6 Free';
+	font-style: normal;
+	font-weight: 900;
+	font-display: swap;
+	src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Font Awesome 6 Brands';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-brands-400.woff2') format('woff2');
+}
+
+/* ==========================================================================
+   Base Classes
+   ========================================================================== */
+
+.fa,
+.fas,
+.far,
+.fab {
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
+	display: inline-block;
+	font-style: normal;
+	font-variant: normal;
+	line-height: 1;
+	text-rendering: auto;
+}
+
+.fa, .fas {
+	font-family: 'Font Awesome 6 Free';
+	font-weight: 900;
+}
+
+.far {
+	font-family: 'Font Awesome 6 Free';
+	font-weight: 400;
+}
+
+.fab {
+	font-family: 'Font Awesome 6 Brands';
+	font-weight: 400;
+}
+
+/* ==========================================================================
+   Size Modifiers
+   ========================================================================== */
+
+.fa-xs { font-size: 0.75em; }
+.fa-sm { font-size: 0.875em; }
+.fa-lg { font-size: 1.25em; }
+.fa-xl { font-size: 1.5em; }
+.fa-2x { font-size: 2em; }
+.fa-3x { font-size: 3em; }
+.fa-4x { font-size: 4em; }
+.fa-5x { font-size: 5em; }
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+
+.fa-fw { text-align: center; width: 1.25em; }
+.fa-spin { animation: fa-spin 2s infinite linear; }
+
+@keyframes fa-spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Solid Icons (fas)
+   ========================================================================== */
+
+/* Navigation & UI */
+.fa-bars::before { content: "\f0c9"; }
+.fa-xmark::before, .fa-times::before { content: "\f00d"; }
+.fa-chevron-down::before { content: "\f078"; }
+.fa-chevron-up::before { content: "\f077"; }
+.fa-chevron-right::before { content: "\f054"; }
+.fa-chevron-left::before { content: "\f053"; }
+.fa-angle-down::before { content: "\f107"; }
+.fa-angle-up::before { content: "\f106"; }
+.fa-angle-right::before { content: "\f105"; }
+.fa-angle-left::before { content: "\f104"; }
+.fa-arrow-right::before { content: "\f061"; }
+.fa-arrow-left::before { content: "\f060"; }
+.fa-arrow-up::before { content: "\f062"; }
+.fa-arrow-down::before { content: "\f063"; }
+.fa-search::before, .fa-magnifying-glass::before { content: "\f002"; }
+.fa-plus::before { content: "\f067"; }
+.fa-minus::before { content: "\f068"; }
+.fa-caret-down::before { content: "\f0d7"; }
+.fa-caret-up::before { content: "\f0d8"; }
+.fa-caret-right::before { content: "\f0da"; }
+.fa-ellipsis::before, .fa-ellipsis-h::before { content: "\f141"; }
+
+/* Contact & Communication */
+.fa-phone::before { content: "\f095"; }
+.fa-phone-alt::before, .fa-phone-flip::before { content: "\f879"; }
+.fa-envelope::before { content: "\f0e0"; }
+.fa-location-dot::before, .fa-map-marker-alt::before { content: "\f3c5"; }
+.fa-map-pin::before { content: "\f276"; }
+.fa-paper-plane::before { content: "\f1d8"; }
+.fa-comment::before { content: "\f075"; }
+.fa-comments::before { content: "\f086"; }
+.fa-message::before { content: "\f27a"; }
+
+/* Time & Schedule */
+.fa-clock::before { content: "\f017"; }
+.fa-calendar::before { content: "\f133"; }
+.fa-calendar-days::before, .fa-calendar-alt::before { content: "\f073"; }
+.fa-calendar-check::before { content: "\f274"; }
+
+/* Actions & Status */
+.fa-check::before { content: "\f00c"; }
+.fa-check-circle::before, .fa-circle-check::before { content: "\f058"; }
+.fa-xmark-circle::before, .fa-times-circle::before, .fa-circle-xmark::before { content: "\f057"; }
+.fa-exclamation-circle::before, .fa-circle-exclamation::before { content: "\f06a"; }
+.fa-info-circle::before, .fa-circle-info::before { content: "\f05a"; }
+.fa-question-circle::before, .fa-circle-question::before { content: "\f059"; }
+.fa-exclamation-triangle::before, .fa-triangle-exclamation::before { content: "\f071"; }
+
+/* Ratings & Reviews */
+.fa-star::before { content: "\f005"; }
+.fa-star-half::before { content: "\f089"; }
+.fa-star-half-alt::before, .fa-star-half-stroke::before { content: "\f5c0"; }
+.fa-thumbs-up::before { content: "\f164"; }
+.fa-thumbs-down::before { content: "\f165"; }
+.fa-heart::before { content: "\f004"; }
+.fa-award::before { content: "\f559"; }
+.fa-trophy::before { content: "\f091"; }
+.fa-medal::before { content: "\f5a2"; }
+.fa-certificate::before { content: "\f0a3"; }
+
+/* Quotes & Text */
+.fa-quote-left::before { content: "\f10d"; }
+.fa-quote-right::before { content: "\f10e"; }
+
+/* Business & Services */
+.fa-home::before, .fa-house::before { content: "\f015"; }
+.fa-building::before { content: "\f1ad"; }
+.fa-store::before { content: "\f54e"; }
+.fa-briefcase::before { content: "\f0b1"; }
+.fa-user::before { content: "\f007"; }
+.fa-users::before { content: "\f0c0"; }
+.fa-handshake::before { content: "\f2b5"; }
+.fa-hand-holding-dollar::before, .fa-hand-holding-usd::before { content: "\f4c0"; }
+.fa-dollar-sign::before { content: "\f155"; }
+.fa-credit-card::before { content: "\f09d"; }
+.fa-truck::before { content: "\f0d1"; }
+.fa-shipping-fast::before, .fa-truck-fast::before { content: "\f48b"; }
+
+/* Tools & Trade */
+.fa-wrench::before { content: "\f0ad"; }
+.fa-screwdriver-wrench::before, .fa-tools::before { content: "\f7d9"; }
+.fa-gear::before, .fa-cog::before { content: "\f013"; }
+.fa-gears::before, .fa-cogs::before { content: "\f085"; }
+.fa-hammer::before { content: "\f6e3"; }
+.fa-toolbox::before { content: "\f552"; }
+.fa-hard-hat::before, .fa-helmet-safety::before { content: "\f807"; }
+
+/* Security & Trust */
+.fa-shield::before { content: "\f132"; }
+.fa-shield-halved::before, .fa-shield-alt::before { content: "\f3ed"; }
+.fa-lock::before { content: "\f023"; }
+.fa-unlock::before { content: "\f09c"; }
+.fa-user-shield::before { content: "\f505"; }
+
+/* Documents & Files */
+.fa-file::before { content: "\f15b"; }
+.fa-file-alt::before, .fa-file-lines::before { content: "\f15c"; }
+.fa-file-pdf::before { content: "\f1c1"; }
+.fa-download::before { content: "\f019"; }
+.fa-upload::before { content: "\f093"; }
+.fa-print::before { content: "\f02f"; }
+.fa-copy::before { content: "\f0c5"; }
+.fa-clipboard::before { content: "\f328"; }
+.fa-list::before { content: "\f03a"; }
+.fa-list-check::before, .fa-tasks::before { content: "\f0ae"; }
+
+/* Media */
+.fa-image::before { content: "\f03e"; }
+.fa-images::before { content: "\f302"; }
+.fa-camera::before { content: "\f030"; }
+.fa-video::before { content: "\f03d"; }
+.fa-play::before { content: "\f04b"; }
+.fa-pause::before { content: "\f04c"; }
+.fa-circle-play::before, .fa-play-circle::before { content: "\f144"; }
+
+/* Misc */
+.fa-lightbulb::before { content: "\f0eb"; }
+.fa-bolt::before { content: "\f0e7"; }
+.fa-fire::before { content: "\f06d"; }
+.fa-droplet::before, .fa-tint::before { content: "\f043"; }
+.fa-leaf::before { content: "\f06c"; }
+.fa-tree::before { content: "\f1bb"; }
+.fa-sun::before { content: "\f185"; }
+.fa-snowflake::before { content: "\f2dc"; }
+.fa-thermometer-half::before, .fa-temperature-half::before { content: "\f2c9"; }
+.fa-wind::before { content: "\f72e"; }
+.fa-water::before { content: "\e005"; }
+.fa-faucet::before { content: "\e005"; }
+.fa-faucet-drip::before { content: "\e006"; }
+.fa-bath::before { content: "\f2cd"; }
+.fa-shower::before { content: "\f2cc"; }
+.fa-toilet::before { content: "\f7d8"; }
+.fa-sink::before { content: "\e06d"; }
+.fa-hot-tub-person::before, .fa-hot-tub::before { content: "\f593"; }
+.fa-swimming-pool::before, .fa-person-swimming::before { content: "\f5c4"; }
+
+/* ==========================================================================
+   Regular Icons (far) - Outline versions
+   ========================================================================== */
+
+.far.fa-star::before { content: "\f005"; }
+.far.fa-heart::before { content: "\f004"; }
+.far.fa-envelope::before { content: "\f0e0"; }
+.far.fa-clock::before { content: "\f017"; }
+.far.fa-calendar::before { content: "\f133"; }
+.far.fa-calendar-days::before, .far.fa-calendar-alt::before { content: "\f073"; }
+.far.fa-circle-check::before, .far.fa-check-circle::before { content: "\f058"; }
+.far.fa-comment::before { content: "\f075"; }
+.far.fa-comments::before { content: "\f086"; }
+.far.fa-file::before { content: "\f15b"; }
+.far.fa-user::before { content: "\f007"; }
+.far.fa-thumbs-up::before { content: "\f164"; }
+.far.fa-thumbs-down::before { content: "\f165"; }
+.far.fa-image::before { content: "\f03e"; }
+.far.fa-copy::before { content: "\f0c5"; }
+.far.fa-clipboard::before { content: "\f328"; }
+.far.fa-circle-play::before, .far.fa-play-circle::before { content: "\f144"; }
+
+/* ==========================================================================
+   Brand Icons (fab) - Social Media & Platforms
+   ========================================================================== */
+
+.fa-facebook::before, .fa-facebook-f::before { content: "\f39e"; }
+.fa-facebook-square::before, .fa-square-facebook::before { content: "\f082"; }
+.fa-twitter::before { content: "\f099"; }
+.fa-x-twitter::before { content: "\e61b"; }
+.fa-square-twitter::before, .fa-twitter-square::before { content: "\f081"; }
+.fa-instagram::before { content: "\f16d"; }
+.fa-square-instagram::before, .fa-instagram-square::before { content: "\e055"; }
+.fa-linkedin::before, .fa-linkedin-in::before { content: "\f0e1"; }
+.fa-linkedin-square::before, .fa-square-linkedin::before { content: "\f08c"; }
+.fa-youtube::before { content: "\f167"; }
+.fa-square-youtube::before, .fa-youtube-square::before { content: "\f431"; }
+.fa-tiktok::before { content: "\e07b"; }
+.fa-pinterest::before, .fa-pinterest-p::before { content: "\f231"; }
+.fa-square-pinterest::before, .fa-pinterest-square::before { content: "\f0d3"; }
+.fa-whatsapp::before { content: "\f232"; }
+.fa-square-whatsapp::before, .fa-whatsapp-square::before { content: "\f40c"; }
+.fa-google::before { content: "\f1a0"; }
+.fa-yelp::before { content: "\f1e9"; }
+.fa-tripadvisor::before { content: "\f262"; }
+.fa-nextdoor::before { content: "\e07b"; }
+.fa-apple::before { content: "\f179"; }
+.fa-android::before { content: "\f17b"; }
+.fa-windows::before { content: "\f17a"; }
+.fa-paypal::before { content: "\f1ed"; }
+.fa-cc-visa::before { content: "\f1f0"; }
+.fa-cc-mastercard::before { content: "\f1f1"; }
+.fa-cc-amex::before { content: "\f1f3"; }
+.fa-cc-discover::before { content: "\f1f2"; }

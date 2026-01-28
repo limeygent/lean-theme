@@ -39,8 +39,13 @@ $dropdown_bg = get_option('dropdown_bg', '#ffffff');
 $dropdown_text = get_option('dropdown_text', '#333333');
 ?>
 
-<?php if ($ga4_id): ?>
-<!-- Google tag (gtag.js) -->
+<?php
+// Get GTM ID to determine which analytics to use
+$gtm_id = get_option('gtm_container_id', '');
+?>
+
+<?php if (!$gtm_id && $ga4_id): ?>
+<!-- Google tag (gtag.js) - only if GTM not set -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo esc_attr($ga4_id); ?>"></script>
 <script>
 	window.dataLayer = window.dataLayer || [];
@@ -51,6 +56,14 @@ $dropdown_text = get_option('dropdown_text', '#333333');
 <?php endif; ?>
 
 <?php wp_body_open(); ?>
+
+<?php if ($gtm_id): ?>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<?php echo esc_attr($gtm_id); ?>"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+<?php endif; ?>
+
 <a class="lean-skip" href="#lean-main">Skip to content</a>
 <div id="lean-root" class="lean-root">
 
@@ -177,12 +190,15 @@ $dropdown_text = get_option('dropdown_text', '#333333');
 						<!-- Close button for mobile (inside nav) -->
 						<label for="nav-toggle" class="nav-close d-lg-none" aria-label="Close navigation">×</label>
 						<?php
-						wp_nav_menu([
-							'theme_location' => 'primary',
-							'container'      => false,
-							'menu_class'     => 'header-menu list-unstyled mb-0',
-							'fallback_cb'    => false,
-						]);
+						$menu_location = get_option('lean_menu_location', 'primary');
+						if ($menu_location) {
+							wp_nav_menu([
+								'theme_location' => $menu_location,
+								'container'      => false,
+								'menu_class'     => 'header-menu list-unstyled mb-0',
+								'fallback_cb'    => false,
+							]);
+						}
 						?>
 					</nav>
 				</div>

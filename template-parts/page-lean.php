@@ -7,18 +7,16 @@
  *   - template-parts/lean-head.php
  *   - template-parts/lean-header.php
  *   - template-parts/lean-footer.php
- *
- * Note: This is an alias of bad-ass-optimized.php for backward compatibility.
  */
 ?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
 	<head>
-		<?php get_template_part('template-parts/lean-head'); ?>
+		<?php lean_get_template_part('template-parts/lean-head'); ?>
 	</head>
 
 	<body class="lean-body">
-		<?php get_template_part('template-parts/lean-header'); ?>
+		<?php lean_get_template_part('template-parts/lean-header'); ?>
 
 		<!--  Content  -->
 		<main id="lean-main" class="lean-main container" tabindex="-1">
@@ -50,6 +48,6 @@
 			?>
 		</main>
 
-		<?php get_template_part('template-parts/lean-footer'); ?>
+		<?php lean_get_template_part('template-parts/lean-footer'); ?>
 	</body>
 </html>
