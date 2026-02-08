@@ -36,13 +36,16 @@ $lean_css_ver = file_exists($lean_css_path) ? filemtime($lean_css_path) : time()
 $fa_css_path = $theme_dir . '/css/fontawesome-minimal.css';
 $fa_css_ver = file_exists($fa_css_path) ? filemtime($fa_css_path) : time();
 
+$bi_css_path = $theme_dir . '/css/bootstrap-icons.min.css';
+$bi_css_ver = file_exists($bi_css_path) ? filemtime($bi_css_path) : time();
+
 // Analytics IDs
 $gtm_id = get_option('gtm_container_id', '');
 $clarity_id = get_option('clarity_project_id', '');
 ?>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="theme-color" content="#025592" />
+<meta name="theme-color" content="<?php echo esc_attr(get_option('header_top_bg', '#f8f9fa')); ?>" />
 
 <?php if ($gtm_id): ?>
 <!-- Google Tag Manager -->
@@ -89,10 +92,6 @@ $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'
 
 <?php if (function_exists('lean_output_seo_meta_tags')) lean_output_seo_meta_tags(); ?>
 
-<!-- Preload local Roboto -->
-<link rel="preload" href="<?php echo $theme_uri; ?>/assets/fonts/roboto/roboto-v49-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="<?php echo $theme_uri; ?>/assets/fonts/roboto/roboto-v49-latin-700.woff2" as="font" type="font/woff2" crossorigin>
-
 <?php if ($hero_image && !empty($hero_image['url'])): ?>
 <!-- Preload hero image (LCP element) -->
 <link rel="preload" href="<?php echo esc_url($hero_image['url']); ?>" as="image" fetchpriority="high">
@@ -102,6 +101,7 @@ $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'
 <link rel="preload" href="<?php echo $theme_rel; ?>/css/bootstrap.css?ver=<?php echo $bootstrap_css_ver; ?>" as="style">
 <link rel="preload" href="<?php echo $theme_rel; ?>/css/lean-pages.css?ver=<?php echo $lean_css_ver; ?>" as="style">
 <link rel="preload" href="<?php echo $theme_rel; ?>/css/fontawesome-minimal.css?ver=<?php echo $fa_css_ver; ?>" as="style">
+<link rel="preload" href="<?php echo $theme_rel; ?>/css/bootstrap-icons.min.css?ver=<?php echo $bi_css_ver; ?>" as="style">
 
 <!-- Apply stylesheets (blocking for FOUC prevention) -->
 <link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/bootstrap.css?ver=<?php echo $bootstrap_css_ver; ?>">
@@ -109,6 +109,9 @@ $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'
 
 <!-- Font Awesome (minimal subset - ~4KB vs 18KB) -->
 <link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/fontawesome-minimal.css?ver=<?php echo $fa_css_ver; ?>">
+
+<!-- Bootstrap Icons (subset - ~2.6KB vs 86KB) -->
+<link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/bootstrap-icons.min.css?ver=<?php echo $bi_css_ver; ?>">
 
 <?php if ($clarity_id): ?>
 <!-- MS Clarity -->
@@ -131,16 +134,6 @@ $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'
 		z-index: 0;
 	}
 	<?php endif; ?>
-
-	/* Local Roboto (WOFF2 only) */
-	@font-face {
-		font-family: "Roboto";
-		src: url("<?php echo $theme_uri; ?>/assets/fonts/roboto/roboto-v49-latin-regular.woff2") format("woff2");
-		font-weight: 400; font-style: normal; font-display: swap;
-	}
-	@font-face {
-		font-family: "Roboto";
-		src: url("<?php echo $theme_uri; ?>/assets/fonts/roboto/roboto-v49-latin-700.woff2") format("woff2");
-		font-weight: 700; font-style: normal; font-display: swap;
-	}
 </style>
+
+<?php do_action('lean_head'); ?>

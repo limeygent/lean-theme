@@ -95,7 +95,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 						$link_start = '';
 						$link_end = '';
 						if (!empty($item['link'])) {
-							$link_start = '<a href="' . esc_url($item['link']) . '" class="header-item-link">';
+							$link_start = '<a href="' . esc_url($item['link']) . '" class="header-item-link btn btn-outline-light btn-lg px-5">';
 							$link_end = '</a>';
 						}
 

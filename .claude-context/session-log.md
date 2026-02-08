@@ -1,5 +1,44 @@
 # Lean Theme Session Log
 
+## Session: 2026-01-28
+
+### Summary
+Added custom hooks (`lean_head`, `lean_footer`) for code snippet injection on lean pages. Fixed font preload warnings. Added Gutenberg block CSS and WP Customizer CSS support to lean pages.
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `template-parts/lean-head.php` | Added `do_action('lean_head')` hook, removed duplicate Roboto @font-face, removed font preload hints |
+| `template-parts/lean-footer.php` | Added `do_action('lean_footer')` hook |
+| `lean-loader.php` | Added Customizer CSS output on lean_head, added Gutenberg block CSS output on lean_head |
+
+### Custom Hooks Added
+Two custom action hooks for lean pages (since `wp_head`/`wp_footer` are not called):
+
+| Hook | Location | Purpose |
+|------|----------|---------|
+| `lean_head` | End of `<head>` in lean-head.php | Inject scripts/styles into head |
+| `lean_footer` | Before closing scripts in lean-footer.php | Inject scripts into footer |
+
+**Usage in code snippets (to run on both legacy and lean pages):**
+```php
+add_action('wp_head', 'my_function');
+add_action('lean_head', 'my_function');
+```
+
+### Auto-injected via lean_head
+These are hooked automatically in `lean-loader.php`:
+- **WP Customizer CSS** — Appearance > Customize > Additional CSS now works on lean pages
+- **Gutenberg block CSS** — `wp-block-library/style.min.css` loaded so Gutenberg blocks (columns, images, etc.) render correctly
+
+### Font Preload Fix
+- Removed Roboto preload hints from lean-head.php (were causing "preloaded but not used" console warnings)
+- Removed duplicate inline @font-face declarations (already in lean-pages.css)
+- `font-display: swap` in lean-pages.css handles font loading efficiently without preloads
+
+---
+
 ## Session: 2026-01-27
 
 ### Summary

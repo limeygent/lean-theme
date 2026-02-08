@@ -126,27 +126,6 @@ function lean_theme_business_fields() {
 		<td><input type="text" name="business_zip" id="business_zip" value="<?php echo esc_attr(get_option('business_zip', '')); ?>" class="small-text" maxlength="10"></td>
 	</tr>
 	<tr>
-		<th scope="row"><label for="business_hours">Business Hours</label></th>
-		<td>
-			<textarea name="business_hours" id="business_hours" rows="5" class="large-text"><?php echo esc_textarea(get_option('business_hours', '')); ?></textarea>
-			<p class="description">HTML allowed. Example: <code>&lt;p class="hours"&gt;Mon-Fri: 8am-5pm&lt;/p&gt;</code></p>
-		</td>
-	</tr>
-	<tr>
-		<th scope="row"><label for="service_area">Service Area</label></th>
-		<td>
-			<input type="text" name="service_area" id="service_area" value="<?php echo esc_attr(get_option('service_area', '')); ?>" class="regular-text" placeholder="Dallas-Fort Worth Metroplex">
-			<p class="description">Displayed in footer</p>
-		</td>
-	</tr>
-	<tr>
-		<th scope="row"><label for="service_area_url">Service Area Link</label></th>
-		<td>
-			<input type="text" name="service_area_url" id="service_area_url" value="<?php echo esc_attr(get_option('service_area_url', '/service-areas/')); ?>" class="regular-text">
-			<p class="description">URL for service area link</p>
-		</td>
-	</tr>
-	<tr>
 		<th scope="row"><label for="google_maps_cid">Google Maps CID</label></th>
 		<td>
 			<input type="text" name="google_maps_cid" id="google_maps_cid" value="<?php echo esc_attr(get_option('google_maps_cid', '')); ?>" class="regular-text">
@@ -323,6 +302,22 @@ function lean_theme_appearance_fields() {
 		<th scope="row"><label for="footer_text">Footer Text Color</label></th>
 		<td><input type="text" name="footer_text" id="footer_text" value="<?php echo esc_attr(get_option('footer_text', '#ffffff')); ?>" class="regular-text" placeholder="#ffffff"></td>
 	</tr>
+
+	<tr><td colspan="2"><h2>Footer Widgets</h2></td></tr>
+	<tr>
+		<td colspan="2">
+			<p class="description">Configure up to 4 footer columns. Empty columns will be skipped. HTML and shortcodes are supported.</p>
+		</td>
+	</tr>
+	<?php for ($i = 1; $i <= 4; $i++): ?>
+	<tr>
+		<th scope="row"><label for="footer_widget_<?php echo $i; ?>">Footer Widget <?php echo $i; ?></label></th>
+		<td>
+			<textarea name="footer_widget_<?php echo $i; ?>" id="footer_widget_<?php echo $i; ?>" rows="10" class="large-text code"><?php echo esc_textarea(get_option('footer_widget_' . $i, '')); ?></textarea>
+			<p class="description">HTML and shortcodes allowed (e.g., [business_phone_link], [business_full_address])</p>
+		</td>
+	</tr>
+	<?php endfor; ?>
 	<?php
 }
 
@@ -443,6 +438,64 @@ function lean_theme_shortcodes_reference() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// DEFAULT FOOTER WIDGETS
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Populate default footer widgets on theme activation
+ */
+function lean_theme_set_default_footer_widgets() {
+	// Only set if footer_widget_1 is empty (first activation)
+	if (get_option('footer_widget_1') === false) {
+		// Widget 1: Logo & Contact Info
+		$widget_1 = '<?php $logo_url = get_option("business_logo_url"); $business_name = get_option("business_name", get_bloginfo("name")); ?>
+<?php if ($logo_url): ?>
+<img src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr($business_name); ?>" width="300" height="169" loading="lazy" />
+<?php endif; ?>
+<div class="mt-3">
+	<div class="footer-business-name" style="font-size: 1.5rem; margin-bottom: 10px;">
+		<strong><?php echo esc_html($business_name); ?></strong>
+	</div>
+	<p style="font-size: 1.5rem; margin-bottom: 5px;"><strong>Address:</strong></p>
+	<div class="footer-address" style="margin-bottom: 15px;">
+		[business_full_address]
+	</div>
+	<div class="phone-number">
+		<p style="font-size: 1.5rem; margin-bottom: 5px;"><strong>Phone:</strong></p>
+		[business_phone_link]
+	</div>
+</div>';
+
+		// Widget 2: Google Map
+		$widget_2 = '<?php
+$google_maps_cid = get_option("google_maps_cid", "");
+$google_maps_embed_url = get_option("google_maps_embed_url", "");
+$business_name = get_option("business_name", get_bloginfo("name"));
+$map_src = "";
+if ($google_maps_embed_url) {
+	$map_src = $google_maps_embed_url;
+} elseif ($google_maps_cid) {
+	$map_src = "https://www.google.com/maps?cid=" . esc_attr($google_maps_cid) . "&output=embed";
+}
+if ($map_src):
+?>
+<div class="map-container">
+	<iframe src="<?php echo esc_url($map_src); ?>" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map to <?php echo esc_attr($business_name); ?>"></iframe>
+</div>
+<?php endif; ?>';
+
+		// Widget 3: Empty (for user customization)
+		$widget_3 = '';
+
+		update_option('footer_widget_1', $widget_1);
+		update_option('footer_widget_2', $widget_2);
+		update_option('footer_widget_3', $widget_3);
+		// Widget 4 left empty for user customization
+	}
+}
+add_action('after_switch_theme', 'lean_theme_set_default_footer_widgets');
+
+// ──────────────────────────────────────────────────────────────────────────────
 // SAVE SETTINGS
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -450,7 +503,7 @@ function lean_theme_save_settings() {
 	// Text fields
 	$text_fields = array(
 		'business_name', 'header_tagline', 'business_phone', 'business_address',
-		'business_city', 'business_state', 'business_zip', 'service_area', 'service_area_url',
+		'business_city', 'business_state', 'business_zip',
 		'google_maps_cid', 'google_kgid', 'gtm_container_id', 'ga4_measurement_id', 'clarity_project_id',
 		'primary_color', 'secondary_color',
 		'lean_menu_location',
@@ -472,11 +525,6 @@ function lean_theme_save_settings() {
 		if (isset($_POST[$field])) {
 			update_option($field, esc_url_raw($_POST[$field]));
 		}
-	}
-
-	// HTML fields (allow safe HTML)
-	if (isset($_POST['business_hours'])) {
-		update_option('business_hours', wp_kses_post($_POST['business_hours']));
 	}
 
 	// Email fields
@@ -504,6 +552,13 @@ function lean_theme_save_settings() {
 			];
 		}
 		update_option('header_top_items', $sanitized_items);
+	}
+
+	// Footer widgets (allow HTML)
+	for ($i = 1; $i <= 4; $i++) {
+		if (isset($_POST['footer_widget_' . $i])) {
+			update_option('footer_widget_' . $i, wp_kses_post($_POST['footer_widget_' . $i]));
+		}
 	}
 }
 

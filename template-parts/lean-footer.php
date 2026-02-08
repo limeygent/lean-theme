@@ -2,93 +2,68 @@
 /**
  * Lean Footer Template Part
  *
- * The optimized footer with business info, map, hours, and tracking scripts.
+ * The optimized footer with customizable widgets configured in Appearance > Lean Theme.
  *
  * Usage in page templates:
  *   <?php get_template_part('template-parts/lean-footer'); ?>
  *
- * Settings used (Appearance > Lean Theme):
- *   - business_logo_url
- *   - business_hours (HTML)
- *   - google_maps_cid or google_maps_embed_url
- *   - service_area, service_area_url
+ * Settings used (Appearance > Lean Theme > Footer Widgets):
+ *   - footer_widget_1 through footer_widget_4 (HTML)
  *   - footer_bg, footer_text (colors)
  */
 
-// Get configurable values
-$logo_url = get_option('business_logo_url', '');
-$business_name = get_option('business_name', get_bloginfo('name'));
-$google_maps_cid = get_option('google_maps_cid', '');
-$google_maps_embed_url = get_option('google_maps_embed_url', '');
-$business_hours = get_option('business_hours', '');
-$service_area = get_option('service_area', '');
-$service_area_url = get_option('service_area_url', '/service-areas/');
-
-// Colors
+// Get footer colors
 $footer_bg = get_option('footer_bg', '#212529');
 $footer_text = get_option('footer_text', '#ffffff');
+$business_name = get_option('business_name', get_bloginfo('name'));
+
+// Get footer widgets and filter out empty ones
+$widgets = [];
+for ($i = 1; $i <= 4; $i++) {
+	$widget_content = get_option('footer_widget_' . $i, '');
+	if (!empty(trim($widget_content))) {
+		$widgets[] = $widget_content;
+	}
+}
+
+// Calculate Bootstrap column class based on widget count
+$widget_count = count($widgets);
+$col_class = 'col-12'; // Default for mobile
+if ($widget_count === 4) {
+	$col_class .= ' col-lg-3';
+} elseif ($widget_count === 3) {
+	$col_class .= ' col-lg-4';
+} elseif ($widget_count === 2) {
+	$col_class .= ' col-lg-6';
+} elseif ($widget_count === 1) {
+	$col_class .= ' col-lg-12';
+}
 ?>
+<script async src="https://online-booking.housecallpro.com/script.js?token=6b7fc522d39f48b6a21ef6e73d6ad96c&orgName=Staggs-Plumbing"></script>
+
 <!--  Footer  -->
 <footer id="lean-footer" class="lean-footer" role="contentinfo" style="background-color: <?php echo esc_attr($footer_bg); ?>; color: <?php echo esc_attr($footer_text); ?>;">
 	<div class="container">
 		<div class="row">
-
-			<!-- Column 1: Logo, Business Name, Address -->
-			<div class="col-12 col-lg-4 mb-4 text-center text-lg-left">
-				<?php if ($logo_url): ?>
-				<img src="<?php echo esc_url($logo_url); ?>"
-					 alt="<?php echo esc_attr($business_name); ?>"
-					 width="300" height="169" loading="lazy" />
-				<?php endif; ?>
-				<div class="mt-3">
-					<div class="footer-business-name" style="font-size: 1.5rem; margin-bottom: 10px;">
-						<strong><?php echo esc_html($business_name); ?></strong>
-					</div>
-					<p style="font-size: 1.5rem; margin-bottom: 5px;"><strong>Address:</strong></p>
-					<div class="footer-address" style="margin-bottom: 15px;">
-						<?php echo do_shortcode('[business_full_address]'); ?>
-					</div>
-					<div class="phone-number">
-						<p style="font-size: 1.5rem; margin-bottom: 5px;"><strong>Phone:</strong></p>
-						<?php echo do_shortcode('[business_phone_link]'); ?>
-					</div>
+			<?php if (!empty($widgets)): ?>
+				<?php foreach ($widgets as $widget): ?>
+				<div class="<?php echo esc_attr($col_class); ?> mb-4">
+					<?php
+					// Process PHP code if present
+					ob_start();
+					eval('?>' . $widget);
+					$processed_widget = ob_get_clean();
+					// Then process shortcodes
+					echo do_shortcode($processed_widget);
+					?>
 				</div>
-			</div>
-
-			<!-- Column 2: Google Map -->
-			<?php
-			$map_src = '';
-			if ($google_maps_embed_url) {
-				$map_src = $google_maps_embed_url;
-			} elseif ($google_maps_cid) {
-				$map_src = 'https://www.google.com/maps?cid=' . esc_attr($google_maps_cid) . '&output=embed';
-			}
-			if ($map_src):
-			?>
-			<div class="col-12 col-md-4 mb-4 d-none d-lg-block">
-				<div class="map-container">
-					<iframe
-							src="<?php echo esc_url($map_src); ?>"
-							width="100%" height="350" style="border:0;" allowfullscreen=""
-							loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-							title="Map to <?php echo esc_attr($business_name); ?>"></iframe>
+				<?php endforeach; ?>
+			<?php else: ?>
+				<!-- Fallback if no widgets configured -->
+				<div class="col-12 text-center">
+					<p>Configure footer widgets in <strong>Appearance > Lean Theme > Footer Widgets</strong></p>
 				</div>
-			</div>
 			<?php endif; ?>
-
-			<!-- Column 3: Hours -->
-			<div class="col-12 col-lg-4 mb-4 text-center text-lg-left">
-				<?php if ($business_hours): ?>
-				<p style="font-size: 1.5rem;"><strong>Hours:</strong></p>
-				<?php echo wp_kses_post($business_hours); ?>
-				<?php endif; ?>
-
-				<?php if ($service_area): ?>
-				<p class="mt-4 mb-1"><strong>Service Area:</strong></p>
-				<p><a href="<?php echo esc_url($service_area_url); ?>"><?php echo esc_html($service_area); ?></a></p>
-				<?php endif; ?>
-			</div>
-
 		</div>
 	</div>
 
@@ -105,8 +80,10 @@ $footer_text = get_option('footer_text', '#ffffff');
 
 <!-- Mobile Sticky Phone Button -->
 <div class="d-md-none position-fixed w-100 shadow-lg" style="bottom: 0; left: 0; z-index: 1030;">
-	<?php echo do_shortcode('[business_phone_button class="btn btn-warning btn-lg btn-block m-0 rounded-0"]'); ?>
+	<?php echo do_shortcode('[business_phone_button class="btn btn-warning btn-lg w-100 d-block m-0 rounded-0"]'); ?>
 </div>
+
+<?php do_action('lean_footer'); ?>
 
 <!-- Mobile Menu Toggle -->
 <script>

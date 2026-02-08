@@ -77,6 +77,33 @@ require_once LEAN_THEME_DIR . '/inc/migrations/yoast-to-lean-seo.php';
 require_once LEAN_THEME_DIR . '/inc/shortcodes.php';
 
 // ──────────────────────────────────────────────────────────────────────────────
+// LEAN HEAD HOOKS
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Output WP Customizer "Additional CSS" on lean pages via lean_head hook
+ */
+add_action('lean_head', 'lean_output_customizer_css');
+function lean_output_customizer_css() {
+	$custom_css = wp_get_custom_css();
+	if ($custom_css) {
+		echo '<style id="wp-custom-css">' . strip_tags($custom_css) . '</style>' . "\n";
+	}
+}
+
+/**
+ * Output Gutenberg block CSS on lean pages via lean_head hook
+ */
+add_action('lean_head', 'lean_output_block_styles');
+function lean_output_block_styles() {
+	$block_css_path = ABSPATH . WPINC . '/css/dist/block-library/style.min.css';
+	if (file_exists($block_css_path)) {
+		$ver = filemtime($block_css_path);
+		echo '<link rel="stylesheet" href="' . esc_url(includes_url('css/dist/block-library/style.min.css') . '?ver=' . $ver) . '" id="wp-block-library-css">' . "\n";
+	}
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // THEME SETUP (only when running as standalone theme)
 // ──────────────────────────────────────────────────────────────────────────────
 
