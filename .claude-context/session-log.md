@@ -1,5 +1,76 @@
 # Lean Theme Session Log
 
+## Session: 2026-02-08
+
+### Summary
+Implemented customizable footer widget system, added Bootstrap Icons support, merged external changes, and performed settings cleanup for improved flexibility and UX.
+
+### Features Added
+
+**Footer Widget System**
+- Up to 4 customizable HTML textareas in Appearance tab
+- Smart column width calculation: 4 widgets=25%, 3=33%, 2=50%, 1=100%
+- Supports HTML, shortcodes, and PHP code
+- Auto-populates with sensible defaults (Logo/Address, Map, Hours) on first activation
+- Dynamic default function `lean_theme_set_default_footer_widgets()`
+- No forced text alignment (user-configurable)
+
+**Bootstrap Icons Support**
+- Added minimal Bootstrap Icons CSS (~2.6KB vs 86KB full)
+- New file: `css/bootstrap-icons.min.css` with custom Twitter X icon
+- Preloaded in head for performance
+- File versioning with cache busting
+
+**Other Enhancements**
+- House Call Pro booking script integrated into footer
+- Mobile phone button updated: `btn btn-warning btn-lg w-100 d-block m-0 rounded-0`
+- Header top bar items styled as buttons: `btn btn-outline-light btn-lg px-5`
+- Theme-color meta tag now dynamic (uses `header_top_bg` setting)
+
+### Settings Cleanup
+- Removed Business Hours field (no longer needed)
+- Removed Service Area field
+- Removed Service Area Link field
+- Kept address fields (street, city, state, zip) - users continue using shortcodes
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `inc/settings.php` | Added footer widget textareas, default widget function, removed business_hours/service_area fields |
+| `template-parts/lean-footer.php` | Replaced hardcoded 3-column footer with dynamic widget rendering, added booking script |
+| `template-parts/lean-head.php` | Added Bootstrap Icons CSS support, made theme-color meta tag dynamic |
+| `template-parts/lean-header.php` | Updated header item links with button styling |
+| `css/bootstrap-icons.min.css` | NEW - Minimal Bootstrap Icons subset with Twitter X icon |
+| `.claude-context/session-log.md` | Session documentation |
+
+### Merged External Changes
+- Integrated changes from live site (`_changed-files/`)
+- Kept footer widget system (Option A approach)
+- Applied House Call Pro script, Bootstrap Icons, and header styling improvements
+- Deleted temporary `_changed-files/` folder
+
+### Default Footer Widgets
+On first activation, users get:
+1. **Widget 1:** Logo, business name, address, phone
+2. **Widget 2:** Google Map embed (auto-configurable)
+3. **Widget 3:** Empty (for user customization)
+4. **Widget 4:** Empty (for user customization)
+
+### Technical Details
+- Footer widgets use `eval()` to process PHP code (admin-controlled)
+- Output sanitized with `wp_kses_post()` for security
+- Shortcodes processed after PHP evaluation
+- Fallback message if no widgets configured
+
+### GitHub Commit
+- **Commit:** 5cc8d1e
+- **Message:** "Add footer widgets, Bootstrap Icons, and UI improvements"
+- **Branch:** main
+- **Pushed:** February 8, 2026
+
+---
+
 ## Session: 2026-01-28
 
 ### Summary
