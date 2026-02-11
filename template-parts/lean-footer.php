@@ -39,7 +39,12 @@ if ($widget_count === 4) {
 	$col_class .= ' col-lg-12';
 }
 ?>
-<script async src="https://online-booking.housecallpro.com/script.js?token=6b7fc522d39f48b6a21ef6e73d6ad96c&orgName=Staggs-Plumbing"></script>
+<?php
+$booking_widget_script = get_option('booking_widget_script', '');
+if (!empty($booking_widget_script)) {
+	echo $booking_widget_script . "\n";
+}
+?>
 
 <!--  Footer  -->
 <footer id="lean-footer" class="lean-footer" role="contentinfo" style="background-color: <?php echo esc_attr($footer_bg); ?>; color: <?php echo esc_attr($footer_text); ?>;">

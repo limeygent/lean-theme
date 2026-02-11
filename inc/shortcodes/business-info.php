@@ -15,14 +15,15 @@
  * - [business_phone]        - Phone number (plain text)
  * - [business_phone_url]    - Phone tel: URL only
  * - [business_phone_link]   - Clickable phone link
- * - [business_phone_button] - Phone link with custom text/class
+ * - [business_phone_button]      - Phone link with custom text/class
+ * - [lean_business_phone_button] - Phone button with icon/variant (migration shortcode)
+ * - [business_booking]            - Booking button/link/custom (type, class, text attrs)
  * - [google_maps_cid]       - Google Maps CID
  * - [google_kgid]           - Google Knowledge Graph ID
  * - [google_gmb_image_url]  - GMB Image URL
  *
  * All values come from Lean Theme Settings (Appearance > Lean Theme)
  */
-
 // ──────────────────────────────────────────────────────────────────────────────
 // BASIC BUSINESS INFO
 // ──────────────────────────────────────────────────────────────────────────────
@@ -102,6 +103,70 @@ add_shortcode('business_phone_button', function($atts) {
 
 	$class_attr = $atts['class'] ? ' class="' . esc_attr($atts['class']) . '"' : '';
 	return '<a href="tel:+1' . esc_attr($href_phone) . '"' . $class_attr . '>' . esc_html($atts['text']) . '</a>';
+});
+
+// Phone button with icon and variant support (lean_ prefix avoids conflict with parent theme)
+// Usage: [lean_business_phone_button text="Call Now" class="btn btn-primary btn-lg px-5" icon="bi-telephone"]
+//        [lean_business_phone_button variant="orange"]
+function lean_business_phone_button_shortcode( $atts ) {
+	$business_phone = get_option('business_phone', '');
+	$href_phone = preg_replace('/\D/', '', $business_phone);
+	$atts = shortcode_atts( array(
+		'text'    => $business_phone,
+		'class'   => 'btn btn-outline-light btn-lg px-5',
+		'icon'    => 'bi-telephone',
+		'variant' => '',
+	), $atts );
+
+	if ( $atts['variant'] === 'orange' ) {
+		$atts['class'] = 'btn btn-sp-orange btn-lg px-5';
+	}
+
+	return '<a href="tel:+1' . $href_phone . '" class="' . esc_attr( $atts['class'] ) . '">'
+		 . '<i class="bi ' . esc_attr( $atts['icon'] ) . ' me-2"></i>'
+		 . esc_html( $atts['text'] )
+		 . '</a>';
+}
+add_shortcode('lean_business_phone_button', 'lean_business_phone_button_shortcode');
+
+// ──────────────────────────────────────────────────────────────────────────────
+// BOOKING SHORTCODE
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Booking button, link, or custom widget
+// Usage: [business_booking]
+//        [business_booking class="btn btn-sp-orange btn-lg fw-semibold" text="Book Today"]
+//        [business_booking type="link" text="Schedule Online"]
+//        [business_booking type="custom"]
+add_shortcode('business_booking', function($atts) {
+	$booking_code = get_option('booking_code', '');
+	if (empty($booking_code)) {
+		return '';
+	}
+
+	$atts = shortcode_atts(array(
+		'type'  => 'button',
+		'text'  => 'Book Now',
+		'class' => 'btn btn-primary',
+	), $atts);
+
+	$type = $atts['type'];
+
+	// Custom: output HTML, replacing {text} placeholder with text attribute
+	if ($type === 'custom') {
+		return str_replace('{text}', esc_html($atts['text']), $booking_code);
+	}
+
+	// Button and link: treat booking_code as a URL
+	$url = esc_url($booking_code);
+	if (empty($url)) {
+		return '';
+	}
+
+	$class_attr = $atts['class'] ? ' class="' . esc_attr($atts['class']) . '"' : '';
+	$role_attr = ($type === 'button') ? ' role="button"' : '';
+
+	return '<a href="' . $url . '"' . $class_attr . $role_attr . '>' . esc_html($atts['text']) . '</a>';
 });
 
 // ──────────────────────────────────────────────────────────────────────────────

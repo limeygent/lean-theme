@@ -7,7 +7,7 @@
  * Each file is self-contained with its own shortcode registrations.
  */
 
-// Business info: [business_name], [business_phone], [business_phone_link], etc.
+// Business info: [business_name], [business_phone], [business_phone_link], [business_booking], etc.
 require_once __DIR__ . '/shortcodes/business-info.php';
 
 // Blog: [blog_featured_image], [blog_review_notice], [blog_post_interlink], [latest_blog_post]

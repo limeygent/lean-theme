@@ -1,5 +1,50 @@
 # Lean Theme Session Log
 
+## Session: 2026-02-11
+
+### Summary
+Added configurable booking system (settings tab + shortcode) and expanded Bootstrap Icons subset.
+
+### Features Added
+
+**Booking System**
+- New "Booking" settings tab with two fields:
+  - Booking Code — textarea for URL or custom HTML (e.g., HouseCall Pro button)
+  - Booking Widget Script — textarea for 3rd-party JS (auto-injected into footer)
+- Single shortcode `[business_booking]` with `type` attribute (`button`, `link`, `custom`)
+  - `button` (default): wraps URL in BS5-styled anchor with `role="button"`
+  - `link`: wraps URL in plain anchor
+  - `custom`: outputs raw HTML with `{text}` placeholder support
+  - Supports `class` and `text` attributes
+- Replaced hardcoded HouseCall Pro script in footer with dynamic `booking_widget_script` output
+
+**Migration Shortcode**
+- Added `[lean_business_phone_button]` with `lean_` prefix to avoid conflict with parent theme
+- Supports `icon`, `variant`, `text`, `class` attributes
+- Bootstrap Icons support (bi-telephone default)
+
+**Bootstrap Icons Subset**
+- Added `bi-droplet-fill` (`\F30B`), `bi-snow2` (`\f56E`) to subset
+- Now 44 icons in `css/bootstrap-icons.min.css`
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `inc/settings.php` | Added Booking tab, `lean_theme_booking_fields()`, save handlers for `booking_code`/`booking_widget_script`, shortcode reference entries |
+| `inc/shortcodes/business-info.php` | Added `[business_booking]` shortcode, added `[lean_business_phone_button]` migration shortcode, updated file header |
+| `template-parts/lean-footer.php` | Replaced hardcoded HouseCall Pro script with dynamic `booking_widget_script` output |
+| `inc/shortcodes.php` | Updated loader comment to mention `[business_booking]` |
+| `css/bootstrap-icons.min.css` | Added `bi-droplet-fill`, `bi-snow2` icons (44 total) |
+
+### Key Decisions
+- Single booking shortcode with `type` attribute (not separate shortcodes per mode)
+- `{text}` placeholder in custom HTML for dynamic text override
+- Booking fields saved with `wp_unslash()` (not `wp_kses_post`) to allow `<script>` tags — safe because settings page gated by `manage_options`
+- Bootstrap Icons codepoints must be looked up at https://icons.getbootstrap.com/ (don't guess)
+
+---
+
 ## Session: 2026-02-08
 
 ### Summary

@@ -47,6 +47,7 @@ function lean_theme_settings_page() {
 			<a href="?page=lean-theme-settings&tab=appearance" class="nav-tab <?php echo $active_tab === 'appearance' ? 'nav-tab-active' : ''; ?>">Appearance</a>
 			<a href="?page=lean-theme-settings&tab=analytics" class="nav-tab <?php echo $active_tab === 'analytics' ? 'nav-tab-active' : ''; ?>">Analytics</a>
 			<a href="?page=lean-theme-settings&tab=forms" class="nav-tab <?php echo $active_tab === 'forms' ? 'nav-tab-active' : ''; ?>">Contact Form</a>
+			<a href="?page=lean-theme-settings&tab=booking" class="nav-tab <?php echo $active_tab === 'booking' ? 'nav-tab-active' : ''; ?>">Booking</a>
 			<a href="?page=lean-theme-settings&tab=shortcodes" class="nav-tab <?php echo $active_tab === 'shortcodes' ? 'nav-tab-active' : ''; ?>">Shortcodes</a>
 		</nav>
 
@@ -68,6 +69,9 @@ function lean_theme_settings_page() {
 						break;
 					case 'forms':
 						lean_theme_form_fields();
+						break;
+					case 'booking':
+						lean_theme_booking_fields();
 						break;
 					case 'shortcodes':
 						lean_theme_shortcodes_reference();
@@ -386,6 +390,25 @@ function lean_theme_form_fields() {
 	<?php
 }
 
+function lean_theme_booking_fields() {
+	?>
+	<tr>
+		<th scope="row"><label for="booking_code">Booking Code</label></th>
+		<td>
+			<textarea name="booking_code" id="booking_code" rows="6" class="large-text code"><?php echo esc_textarea(get_option('booking_code', '')); ?></textarea>
+			<p class="description">Enter a booking URL (e.g., <code>https://booking.example.com</code>) or custom HTML such as a 3rd-party booking button. Use <code>{text}</code> as a placeholder for dynamic button text via the shortcode's <code>text</code> attribute. Used by the <code>[business_booking]</code> shortcode.</p>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="booking_widget_script">Booking Widget Script</label></th>
+		<td>
+			<textarea name="booking_widget_script" id="booking_widget_script" rows="4" class="large-text code"><?php echo esc_textarea(get_option('booking_widget_script', '')); ?></textarea>
+			<p class="description">Script tag for 3rd-party booking widgets (e.g., HouseCall Pro, Calendly). Automatically loaded in the footer on every page.</p>
+		</td>
+	</tr>
+	<?php
+}
+
 function lean_theme_shortcodes_reference() {
 	?>
 	<tr>
@@ -409,6 +432,9 @@ function lean_theme_shortcodes_reference() {
 					<tr><td><code>[business_full_address]</code></td><td>Full formatted address</td></tr>
 					<tr><td><code>[business_url]</code></td><td><?php echo esc_html(get_option('business_url', home_url())); ?></td></tr>
 					<tr><td><code>[business_logo_url]</code></td><td>Logo image URL</td></tr>
+					<tr><td><code>[business_booking]</code></td><td>Booking button (default)</td></tr>
+					<tr><td><code>[business_booking type="link" text="Book"]</code></td><td>Booking as plain link</td></tr>
+					<tr><td><code>[business_booking type="custom"]</code></td><td>Custom booking widget HTML</td></tr>
 				</tbody>
 			</table>
 
@@ -559,6 +585,14 @@ function lean_theme_save_settings() {
 		if (isset($_POST['footer_widget_' . $i])) {
 			update_option('footer_widget_' . $i, wp_kses_post($_POST['footer_widget_' . $i]));
 		}
+	}
+
+	// Booking fields (allow HTML/script - admin only, page gated by manage_options)
+	if (isset($_POST['booking_code'])) {
+		update_option('booking_code', wp_unslash($_POST['booking_code']));
+	}
+	if (isset($_POST['booking_widget_script'])) {
+		update_option('booking_widget_script', wp_unslash($_POST['booking_widget_script']));
 	}
 }
 
