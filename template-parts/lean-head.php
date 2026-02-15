@@ -67,19 +67,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <?php endif; ?>
 
 
-<?php
-// Favicon
-$site_icon_id = get_option('site_icon');
-if ($site_icon_id) {
-	$site_icon_url = wp_get_attachment_image_url($site_icon_id, 'full');
-	if ($site_icon_url) {
-		echo '<link rel="icon" href="' . esc_url($site_icon_url) . '" sizes="32x32" />' . "\n";
-		echo '<link rel="icon" href="' . esc_url($site_icon_url) . '" sizes="192x192" />' . "\n";
-		echo '<link rel="apple-touch-icon" href="' . esc_url($site_icon_url) . '" />' . "\n";
-		echo '<meta name="msapplication-TileImage" content="' . esc_url($site_icon_url) . '" />' . "\n";
-	}
-}
-?>
+<!-- Favicon -->
+<link rel="shortcut icon" href="/favicon.ico" />
+<?php if (file_exists(ABSPATH . 'site.webmanifest')): ?>
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<?php endif; ?>
 
 <?php
 // Canonical and hreflang
