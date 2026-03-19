@@ -19,7 +19,7 @@
 		<?php lean_get_template_part('template-parts/lean-header'); ?>
 
 		<!--  Content  -->
-		<main id="lean-main" class="lean-main container" tabindex="-1">
+		<main id="lean-main" class="lean-main" tabindex="-1">
 
 			<?php
 			// Only remove wpautop for pages (which use raw HTML)

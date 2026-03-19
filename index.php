@@ -3,30 +3,46 @@
  * Main Template File
  *
  * WordPress requires this file to recognize the theme.
- * For optimized pages, use templates/page-lean.php instead.
+ * Uses the same lean template parts as page-lean.php.
  */
-
-get_header();
 ?>
+<!doctype html>
+<html <?php language_attributes(); ?>>
+	<head>
+		<?php lean_get_template_part('template-parts/lean-head'); ?>
+	</head>
 
-<main id="lean-main" class="lean-main">
-	<div class="container py-5">
-		<?php if (have_posts()): ?>
-			<?php while (have_posts()): the_post(); ?>
-				<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
-					<header>
-						<h1><?php the_title(); ?></h1>
-					</header>
-					<div class="entry-content">
-						<?php the_content(); ?>
-					</div>
-				</article>
-			<?php endwhile; ?>
-		<?php else: ?>
-			<p>No content found.</p>
-		<?php endif; ?>
-	</div>
-</main>
+	<body class="lean-body">
+		<?php lean_get_template_part('template-parts/lean-header'); ?>
 
-<?php
-get_footer();
+		<main id="lean-main" class="lean-main" tabindex="-1">
+			<?php
+			if ( ! is_single() || get_post_type() !== 'post' ) {
+				remove_filter('the_content', 'wpautop');
+				remove_filter('the_content', 'shortcode_unautop');
+			}
+
+			if ( have_posts() ) :
+				while ( have_posts() ) : the_post();
+
+				if ( is_single() && get_post_type() === 'post' ) {
+					echo do_shortcode('[blog_featured_image]');
+					echo do_shortcode('[blog_review_notice]');
+				}
+
+				the_content();
+
+				if ( is_single() && get_post_type() === 'post' ) {
+					echo do_shortcode('[blog_post_interlink]');
+				}
+
+				endwhile;
+			else :
+				echo '<p>No content found.</p>';
+			endif;
+			?>
+		</main>
+
+		<?php lean_get_template_part('template-parts/lean-footer'); ?>
+	</body>
+</html>

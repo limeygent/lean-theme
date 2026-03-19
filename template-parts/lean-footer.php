@@ -90,6 +90,9 @@ if (!empty($booking_widget_script)) {
 
 <?php do_action('lean_footer'); ?>
 
+<!-- Bootstrap JS (needed for accordions) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <!-- Mobile Menu Toggle -->
 <script>
 	document.addEventListener('DOMContentLoaded', function () {

@@ -580,10 +580,10 @@ function lean_theme_save_settings() {
 		update_option('header_top_items', $sanitized_items);
 	}
 
-	// Footer widgets (allow HTML)
+	// Footer widgets (allow HTML/PHP - admin only, page gated by manage_options)
 	for ($i = 1; $i <= 4; $i++) {
 		if (isset($_POST['footer_widget_' . $i])) {
-			update_option('footer_widget_' . $i, wp_kses_post($_POST['footer_widget_' . $i]));
+			update_option('footer_widget_' . $i, wp_unslash($_POST['footer_widget_' . $i]));
 		}
 	}
 
