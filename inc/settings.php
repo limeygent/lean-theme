@@ -48,6 +48,7 @@ function lean_theme_settings_page() {
 			<a href="?page=lean-theme-settings&tab=analytics" class="nav-tab <?php echo $active_tab === 'analytics' ? 'nav-tab-active' : ''; ?>">Analytics</a>
 			<a href="?page=lean-theme-settings&tab=forms" class="nav-tab <?php echo $active_tab === 'forms' ? 'nav-tab-active' : ''; ?>">Contact Form</a>
 			<a href="?page=lean-theme-settings&tab=booking" class="nav-tab <?php echo $active_tab === 'booking' ? 'nav-tab-active' : ''; ?>">Booking</a>
+			<a href="?page=lean-theme-settings&tab=hours" class="nav-tab <?php echo $active_tab === 'hours' ? 'nav-tab-active' : ''; ?>">Hours</a>
 			<a href="?page=lean-theme-settings&tab=shortcodes" class="nav-tab <?php echo $active_tab === 'shortcodes' ? 'nav-tab-active' : ''; ?>">Shortcodes</a>
 		</nav>
 
@@ -72,6 +73,9 @@ function lean_theme_settings_page() {
 						break;
 					case 'booking':
 						lean_theme_booking_fields();
+						break;
+					case 'hours':
+						lean_theme_hours_fields();
 						break;
 					case 'shortcodes':
 						lean_theme_shortcodes_reference();
@@ -114,6 +118,13 @@ function lean_theme_business_fields() {
 		<td><input type="text" name="business_phone" id="business_phone" value="<?php echo esc_attr(get_option('business_phone', '')); ?>" class="regular-text" placeholder="(555) 555-5555"></td>
 	</tr>
 	<tr>
+		<th scope="row"><label for="business_email">Public Email</label></th>
+		<td>
+			<input type="email" name="business_email" id="business_email" value="<?php echo esc_attr(get_option('business_email', '')); ?>" class="regular-text" placeholder="info@example.com">
+			<p class="description">Public-facing contact email. Shown in legal pages and the <code>[business_email]</code> shortcode.</p>
+		</td>
+	</tr>
+	<tr>
 		<th scope="row"><label for="business_address">Street Address</label></th>
 		<td><input type="text" name="business_address" id="business_address" value="<?php echo esc_attr(get_option('business_address', '')); ?>" class="regular-text"></td>
 	</tr>
@@ -123,7 +134,17 @@ function lean_theme_business_fields() {
 	</tr>
 	<tr>
 		<th scope="row"><label for="business_state">State</label></th>
-		<td><input type="text" name="business_state" id="business_state" value="<?php echo esc_attr(get_option('business_state', '')); ?>" class="small-text" maxlength="2" placeholder="TX"></td>
+		<td>
+			<input type="text" name="business_state" id="business_state" value="<?php echo esc_attr(get_option('business_state', '')); ?>" class="regular-text" placeholder="Texas (or TX)">
+			<p class="description">Full state name or 2-letter abbreviation. Legal pages will expand abbreviations to the full name automatically.</p>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row"><label for="business_county">County</label></th>
+		<td>
+			<input type="text" name="business_county" id="business_county" value="<?php echo esc_attr(get_option('business_county', '')); ?>" class="regular-text" placeholder="Collin">
+			<p class="description">Used in the Terms of Use jurisdiction clause. Optional — if blank, venue is set at the state level only.</p>
+		</td>
 	</tr>
 	<tr>
 		<th scope="row"><label for="business_zip">ZIP Code</label></th>
@@ -242,6 +263,15 @@ function lean_theme_appearance_fields() {
 	</tr>
 
 	<tr><td colspan="2"><h2>Header Navigation</h2></td></tr>
+	<tr>
+		<th scope="row"><label for="header_sticky">Sticky Header</label></th>
+		<td>
+			<label>
+				<input type="checkbox" name="header_sticky" id="header_sticky" value="1" <?php checked(get_option('header_sticky'), '1'); ?>>
+				Keep the header (logo + nav) pinned to the top while scrolling
+			</label>
+		</td>
+	</tr>
 	<tr>
 		<th scope="row"><label for="lean_menu_location">Menu Location</label></th>
 		<td>
@@ -409,6 +439,73 @@ function lean_theme_booking_fields() {
 	<?php
 }
 
+function lean_theme_hours_fields() {
+	$hours = get_option('business_hours', []);
+	$days = [
+		'mon' => 'Monday',
+		'tue' => 'Tuesday',
+		'wed' => 'Wednesday',
+		'thu' => 'Thursday',
+		'fri' => 'Friday',
+		'sat' => 'Saturday',
+		'sun' => 'Sunday',
+	];
+	?>
+	<tr>
+		<td colspan="2" style="padding-top:0;">
+			<p class="description" style="font-size:13px;">
+				Set business hours for each day. Leave a day blank to mark it as closed.
+				Use the <strong>second set</strong> only if you close mid-day (e.g., for a lunch break).
+				Output via the <code>[business_hours]</code> shortcode (already placed in Footer Widget 4 by default).
+				Timezone follows your <a href="<?php echo esc_url(admin_url('options-general.php')); ?>">WordPress site timezone</a>.
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row">Hours of Operation</th>
+		<td>
+			<table class="widefat striped" style="max-width:780px;">
+				<thead>
+					<tr>
+						<th style="width:110px;">Day</th>
+						<th style="width:80px;">Closed</th>
+						<th>Set 1 (open – close)</th>
+						<th>Set 2 (optional)</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php foreach ($days as $key => $label):
+					$day = isset($hours[$key]) ? $hours[$key] : ['closed' => false, 'sets' => []];
+					$closed = !empty($day['closed']);
+					$set1_open  = isset($day['sets'][0]['open'])  ? $day['sets'][0]['open']  : '';
+					$set1_close = isset($day['sets'][0]['close']) ? $day['sets'][0]['close'] : '';
+					$set2_open  = isset($day['sets'][1]['open'])  ? $day['sets'][1]['open']  : '';
+					$set2_close = isset($day['sets'][1]['close']) ? $day['sets'][1]['close'] : '';
+				?>
+					<tr>
+						<td><strong><?php echo esc_html($label); ?></strong></td>
+						<td>
+							<input type="checkbox" name="business_hours[<?php echo $key; ?>][closed]" value="1" <?php checked($closed); ?>>
+						</td>
+						<td>
+							<input type="time" name="business_hours[<?php echo $key; ?>][set1_open]"  value="<?php echo esc_attr($set1_open); ?>">
+							&ndash;
+							<input type="time" name="business_hours[<?php echo $key; ?>][set1_close]" value="<?php echo esc_attr($set1_close); ?>">
+						</td>
+						<td>
+							<input type="time" name="business_hours[<?php echo $key; ?>][set2_open]"  value="<?php echo esc_attr($set2_open); ?>">
+							&ndash;
+							<input type="time" name="business_hours[<?php echo $key; ?>][set2_close]" value="<?php echo esc_attr($set2_close); ?>">
+						</td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		</td>
+	</tr>
+	<?php
+}
+
 function lean_theme_shortcodes_reference() {
 	?>
 	<tr>
@@ -513,10 +610,13 @@ if ($map_src):
 		// Widget 3: Empty (for user customization)
 		$widget_3 = '';
 
+		// Widget 4: Business hours + open/closed status (configured in Hours settings tab)
+		$widget_4 = '[business_hours]';
+
 		update_option('footer_widget_1', $widget_1);
 		update_option('footer_widget_2', $widget_2);
 		update_option('footer_widget_3', $widget_3);
-		// Widget 4 left empty for user customization
+		update_option('footer_widget_4', $widget_4);
 	}
 }
 add_action('after_switch_theme', 'lean_theme_set_default_footer_widgets');
@@ -529,7 +629,7 @@ function lean_theme_save_settings() {
 	// Text fields
 	$text_fields = array(
 		'business_name', 'header_tagline', 'business_phone', 'business_address',
-		'business_city', 'business_state', 'business_zip',
+		'business_city', 'business_state', 'business_zip', 'business_county',
 		'google_maps_cid', 'google_kgid', 'gtm_container_id', 'ga4_measurement_id', 'clarity_project_id',
 		'primary_color', 'secondary_color',
 		'lean_menu_location',
@@ -560,9 +660,18 @@ function lean_theme_save_settings() {
 	if (isset($_POST['form_from_email'])) {
 		update_option('form_from_email', sanitize_email($_POST['form_from_email']));
 	}
+	if (isset($_POST['business_email'])) {
+		update_option('business_email', sanitize_email($_POST['business_email']));
+	}
 
-	// Checkbox
-	update_option('form_send_confirmation', isset($_POST['form_send_confirmation']) ? '1' : '');
+	// Checkboxes — only update when the form for the relevant tab was submitted
+	$active_tab = isset($_POST['active_tab']) ? sanitize_text_field($_POST['active_tab']) : '';
+	if ($active_tab === 'forms') {
+		update_option('form_send_confirmation', isset($_POST['form_send_confirmation']) ? '1' : '');
+	}
+	if ($active_tab === 'appearance') {
+		update_option('header_sticky', isset($_POST['header_sticky']) ? '1' : '');
+	}
 
 	// Header top items (array)
 	if (isset($_POST['header_top_items']) && is_array($_POST['header_top_items'])) {
@@ -593,6 +702,27 @@ function lean_theme_save_settings() {
 	}
 	if (isset($_POST['booking_widget_script'])) {
 		update_option('booking_widget_script', wp_unslash($_POST['booking_widget_script']));
+	}
+
+	// Business hours (array — per-day closed flag + up to 2 sets of open/close times)
+	if (isset($_POST['business_hours']) && is_array($_POST['business_hours'])) {
+		$valid_days = ['mon','tue','wed','thu','fri','sat','sun'];
+		$time_re = '/^([01][0-9]|2[0-3]):[0-5][0-9]$/';
+		$clean = [];
+		foreach ($valid_days as $key) {
+			$row = $_POST['business_hours'][$key] ?? [];
+			$closed = !empty($row['closed']);
+			$sets = [];
+			foreach ([1, 2] as $n) {
+				$open  = isset($row["set{$n}_open"])  ? trim($row["set{$n}_open"])  : '';
+				$close = isset($row["set{$n}_close"]) ? trim($row["set{$n}_close"]) : '';
+				if ($open !== '' && $close !== '' && preg_match($time_re, $open) && preg_match($time_re, $close)) {
+					$sets[] = ['open' => $open, 'close' => $close];
+				}
+			}
+			$clean[$key] = ['closed' => $closed, 'sets' => $sets];
+		}
+		update_option('business_hours', $clean);
 	}
 }
 

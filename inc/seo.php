@@ -110,14 +110,21 @@ function lean_output_seo_meta_tags() {
 
 	$modified_time = get_the_modified_time('c', $post->ID);
 
-	// Build robots directives
+	// Build robots directives.
+	// Sitewide override: when Settings → Reading → "Discourage search engines
+	// from indexing this site" is checked (blog_public = 0), force
+	// noindex,nofollow on every page regardless of per-post settings.
+	$site_discouraged = ((int) get_option('blog_public', 1)) === 0;
+	$effective_noindex  = $site_discouraged || !empty($meta_noindex);
+	$effective_nofollow = $site_discouraged || !empty($meta_nofollow);
+
 	$robots = [];
-	$robots[] = $meta_noindex ? 'noindex' : 'index';
-	if (!$meta_noindex) {
+	$robots[] = $effective_noindex ? 'noindex' : 'index';
+	if (!$effective_noindex) {
 		$robots[] = 'max-image-preview:large';
 		$robots[] = 'max-snippet:-1';
 	}
-	$robots[] = $meta_nofollow ? 'nofollow' : 'follow';
+	$robots[] = $effective_nofollow ? 'nofollow' : 'follow';
 	$robots_content = implode(', ', $robots);
 
 	// Get site name from options

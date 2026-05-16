@@ -24,6 +24,7 @@ $ga4_id = get_option('ga4_measurement_id', '');
 $logo_url = get_option('business_logo_url', '');
 $business_name = get_option('business_name', get_bloginfo('name'));
 $header_tagline = get_option('header_tagline', '');
+$header_sticky = get_option('header_sticky') === '1';
 
 // Header top bar settings
 $header_top_mode = get_option('header_top_mode', 'tagline');
@@ -67,7 +68,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <a class="lean-skip" href="#lean-main">Skip to content</a>
 <div id="lean-root" class="lean-root">
 
-	<header id="lean-header" class="lean-header header">
+	<header id="lean-header" class="lean-header header<?php echo $header_sticky ? ' is-sticky sticky-top' : ''; ?>">
 		<?php if ($header_top_mode !== 'none'): ?>
 		<!-- Desktop – Top header bar -->
 		<div class="header-top d-none d-lg-block" style="background-color: <?php echo esc_attr($header_top_bg); ?>; color: <?php echo esc_attr($header_top_text); ?>;">

@@ -57,13 +57,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <?php endif; ?>
 
-<!-- Performance hints -->
+<!-- Performance hints — only emit when the upstream is actually used -->
 <?php if ($gtm_id): ?>
 <link rel="preconnect" href="https://www.googletagmanager.com">
 <?php endif; ?>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <?php if ($clarity_id): ?>
-<link rel="dns-prefetch" href="https://www.clarity.ms">
+<link rel="preconnect" href="https://www.clarity.ms" crossorigin>
 <?php endif; ?>
 
 
@@ -119,16 +118,32 @@ $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'
 </script>
 <?php endif; ?>
 
+<?php if ($hero_image && !empty($hero_image['url'])): ?>
 <style>
-	<?php if ($hero_image && !empty($hero_image['url'])): ?>
-	.hero-bg {
-		background-image: url('<?php echo esc_url($hero_image['url']); ?>');
-		background-size: cover;
-		background-position: center;
-		filter: saturate(1.05) brightness(.95);
-		z-index: 0;
-	}
-	<?php endif; ?>
+.hero-bg {
+	background-image: url('<?php echo esc_url($hero_image['url']); ?>');
+	background-size: cover;
+	background-position: center;
+	filter: saturate(1.05) brightness(.95);
+	z-index: 0;
+}
 </style>
+<?php endif; ?>
+
+<?php
+// Admin bar styles — only loaded when the WP admin bar is showing (logged-in users).
+// We bypass wp_head(), so the styles WordPress would normally enqueue have to be added by hand.
+if (is_admin_bar_showing()):
+	$wp_ver = $GLOBALS['wp_version'];
+?>
+<link rel="stylesheet" id="dashicons-css" href="<?php echo esc_url(includes_url('css/dashicons.min.css') . '?ver=' . $wp_ver); ?>">
+<link rel="stylesheet" id="admin-bar-css" href="<?php echo esc_url(includes_url('css/admin-bar.min.css') . '?ver=' . $wp_ver); ?>">
+<style id="admin-bar-inline-css">
+html { margin-top: 32px !important; }
+@media screen and (max-width: 782px) {
+	html { margin-top: 46px !important; }
+}
+</style>
+<?php endif; ?>
 
 <?php do_action('lean_head'); ?>

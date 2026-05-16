@@ -8,25 +8,7 @@
  * - [blog_review_notice] - Display "reviewed by" notice with date
  * - [blog_post_interlink] - Prev/next post links within same category
  * - [latest_blog_post] - Link to most recent post
- *
- * Also forces blog posts to use the lean template
  */
-
-// ──────────────────────────────────────────────────────────────────────────────
-// TEMPLATE: Force blog posts to use lean template
-// ──────────────────────────────────────────────────────────────────────────────
-
-add_filter('template_include', 'lean_blog_use_lean_template');
-
-function lean_blog_use_lean_template($template) {
-	if (is_single() && get_post_type() === 'post') {
-		$lean_template = locate_template('templates/page-lean.php');
-		if ($lean_template) {
-			return $lean_template;
-		}
-	}
-	return $template;
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // SHORTCODE: [blog_featured_image]

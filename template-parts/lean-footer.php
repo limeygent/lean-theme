@@ -90,8 +90,13 @@ if (!empty($booking_widget_script)) {
 
 <?php do_action('lean_footer'); ?>
 
-<!-- Bootstrap JS (needed for accordions) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap JS (needed for accordions, dropdowns, etc.) — self-hosted, deferred -->
+<?php
+$bs_js_path = defined('LEAN_THEME_DIR') ? LEAN_THEME_DIR . '/js/bootstrap.bundle.min.js' : '';
+$bs_js_url  = defined('LEAN_THEME_URL') ? LEAN_THEME_URL . '/js/bootstrap.bundle.min.js' : '';
+$bs_js_ver  = ($bs_js_path && file_exists($bs_js_path)) ? filemtime($bs_js_path) : '5.3.3';
+?>
+<script src="<?php echo esc_url($bs_js_url . '?ver=' . $bs_js_ver); ?>" defer></script>
 
 <!-- Mobile Menu Toggle -->
 <script>

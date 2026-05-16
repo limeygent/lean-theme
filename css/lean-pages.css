@@ -34,6 +34,7 @@
 	--brand: #005395;
 	--brand-dark: #004677;
 	--brand-darker: #003a6b;
+	--brand-rgb: 0, 83, 149;
 	--hero-color-1: #003a6b;
 	--hero-color-2: #005395;
 	--accent: goldenrod;
@@ -386,6 +387,51 @@ body {
 }
 
 /* ============================================================================
+   REUSABLE COMPONENTS
+   ============================================================================ */
+
+.step-number {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: var(--brand);
+	color: #fff;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	flex-shrink: 0;
+}
+
+.icon-circle {
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: rgba(var(--brand-rgb), .08);
+	color: var(--brand);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.sticky-cta-mobile {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 1050;
+	background: #fff;
+	box-shadow: 0 -4px 12px rgba(0, 0, 0, .1);
+}
+
+@media (min-width: 992px) {
+	.sticky-cta-mobile {
+		display: none !important;
+	}
+}
+
+/* ============================================================================
    FOOTER
    ============================================================================ */
 
@@ -424,6 +470,11 @@ body {
 	box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
+/* Bottom breathing room for the last .lean-section before the footer */
+.lean-section:not(:has(~ .lean-section)) {
+	margin-bottom: 4rem;
+}
+
 .container.lean-section {
 	padding: 3rem 2rem;
 	margin: 4rem auto;
@@ -446,4 +497,107 @@ body {
 	border-left: 8px solid var(--accent);
 	margin: 20px 0;
 	color: white;
+}
+
+/* ============================================================================
+   BLOG POST HERO
+   Full-bleed featured image with title overlay on single posts.
+   ============================================================================ */
+
+.blog-hero {
+	margin-left: calc(-50vw + 50%);
+	margin-right: calc(-50vw + 50%);
+	width: 100vw;
+}
+.blog-hero-img {
+	width: 100%;
+	height: auto;
+	max-height: 70vh;
+	object-fit: cover;
+	aspect-ratio: 21 / 9;
+}
+@media (max-width: 767px) {
+	.blog-hero-img {
+		aspect-ratio: 4 / 3;
+	}
+}
+
+/* ============================================================================
+   LEAN SECTION
+   Generic vertical-rhythm wrapper. Override padding/colors in Customizer
+   "Additional CSS" if you want a different look per site.
+   ============================================================================ */
+
+.lean-section {
+	padding-top: 3rem;
+	padding-bottom: 3rem;
+}
+
+/* ============================================================================
+   STICKY HEADER
+   Applied when "Sticky Header" is enabled in Appearance settings.
+   Offsets for the WordPress admin bar when logged in.
+   ============================================================================ */
+
+.lean-header.is-sticky {
+	z-index: 1020;
+}
+.admin-bar .lean-header.is-sticky {
+	top: 32px;
+}
+@media screen and (max-width: 782px) {
+	.admin-bar .lean-header.is-sticky {
+		top: 46px;
+	}
+}
+
+/* ============================================================================
+   BUSINESS HOURS (footer)
+   Renders via the [business_hours] shortcode.
+   ============================================================================ */
+
+.lean-hours .lean-hours-label {
+	font-size: 1rem;
+}
+.lean-hours .hours-grid {
+	font-size: 1rem;
+	line-height: 1.4;
+}
+.lean-hours .hours-row {
+	display: grid;
+	grid-template-columns: 6.5rem 1fr;
+	padding: .25rem 0;
+	opacity: .85;
+}
+.lean-hours .hours-row.is-today {
+	font-weight: 700;
+	opacity: 1;
+}
+.lean-hours .hours-row .time.closed {
+	opacity: .65;
+}
+.lean-hours .hours-status {
+	display: inline-flex;
+	align-items: center;
+	gap: .5rem;
+	padding: .45rem .9rem;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, .15);
+	font-size: .95rem;
+	font-weight: 600;
+}
+.lean-hours .hours-status::before {
+	content: '';
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background: #adb5bd;
+	flex-shrink: 0;
+}
+.lean-hours .hours-status.is-open {
+	background: rgba(64, 216, 105, .22);
+}
+.lean-hours .hours-status.is-open::before {
+	background: #40d869;
+	box-shadow: 0 0 10px #40d869;
 }
