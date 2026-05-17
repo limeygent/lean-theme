@@ -28,17 +28,12 @@
 
 /* ============================================================================
    BRAND STYLES
+   ----------------------------------------------------------------------------
+   Brand CSS variables (--brand, --brand-dark, --brand-darker, --brand-rgb,
+   --accent) are emitted inline in <head> by lean_theme_inject_custom_colors()
+   in inc/settings.php. Defining them here too would create a cascade race
+   that causes a brief flash of the default color on first paint.
    ============================================================================ */
-
-:root {
-	--brand: #005395;
-	--brand-dark: #004677;
-	--brand-darker: #003a6b;
-	--brand-rgb: 0, 83, 149;
-	--hero-color-1: #003a6b;
-	--hero-color-2: #005395;
-	--accent: goldenrod;
-}
 
 /* ============================================================================
    BASE TYPOGRAPHY
@@ -93,17 +88,37 @@ body {
 .btn-primary {
 	background-color: var(--brand);
 	border-color: var(--brand);
+	color: var(--brand-fg, #fff);
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
 	background-color: var(--brand-dark);
 	border-color: var(--brand-dark);
+	color: var(--brand-fg, #fff);
 }
 
 .btn-warning {
 	background-color: #ffa41c;
 	color: black;
+}
+
+/* Coral / accent CTA button — themed via --accent.
+   Use for the most prominent "book / call / convert" action on a page.
+   Text color is --accent-fg, auto-picked (#fff or #212529) for WCAG contrast
+   against whatever accent the admin configures. See lean_contrast_color()
+   in inc/settings.php. */
+.btn-cta {
+	background-color: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent-fg, #212529);
+}
+.btn-cta:hover,
+.btn-cta:focus {
+	background-color: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent-fg, #212529);
+	filter: brightness(0.92);
 }
 
 /* ============================================================================
@@ -310,6 +325,7 @@ body {
 		min-width: 200px;
 		display: none !important;
 		z-index: 1000;
+		list-style: none !important;
 	}
 
 	.lean-header .header-menu .menu-item-has-children:hover > .sub-menu {
@@ -367,7 +383,7 @@ body {
 }
 
 #lean-main .hero-overlay {
-	background: linear-gradient(90deg, rgba(0,83,149,.75) 0%, rgba(0,83,149,.6) 60%, rgba(0,83,149,.2) 100%);
+	background: linear-gradient(90deg, rgba(var(--brand-rgb),.75) 0%, rgba(var(--brand-rgb),.6) 60%, rgba(var(--brand-rgb),.2) 100%);
 	z-index: 1;
 }
 
@@ -601,3 +617,84 @@ body {
 	background: #40d869;
 	box-shadow: 0 0 10px #40d869;
 }
+
+/* ============================================================================
+   MEGA MENU
+   Activated when a top-level menu item carries the `mega-menu` CSS class.
+   Renders a multi-column dropdown grouped by each child item's Description.
+   Walker: inc/mega-menu-walker.php
+   ============================================================================ */
+
+@media (min-width: 992px) {
+	/* Parent <li> spans the full container so the mega panel can use it as
+	   its positioning context (full-width panel). */
+	.lean-header .header-menu .menu-item-has-children.mega-menu-parent {
+		position: static;
+	}
+
+	/* Mega panel: override the .sub-menu defaults (which set min-width: 200px
+	   and position to the left edge of the parent <li>). Hidden until hover
+	   or keyboard focus on the parent. */
+	.lean-header .header-menu .mega-menu {
+		left: 0 !important;
+		right: 0 !important;
+		width: auto !important;
+		min-width: 0 !important;
+		padding: 1.5rem 2rem !important;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 2rem;
+	}
+
+	/* Hover bridge: the parent <li> is position:static so the panel anchors
+	   off a higher ancestor, leaving a vertical gap between the link text and
+	   the panel. An invisible ::before band above the panel keeps :hover alive
+	   while the cursor crosses that gap. */
+	.lean-header .header-menu .mega-menu::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 100%;
+		height: 1.5rem;
+	}
+
+	/* Reveal on hover or keyboard focus. !important is needed to beat the
+	   existing `.sub-menu` rules in this file which also use !important. */
+	.lean-header .header-menu .menu-item-has-children.mega-menu-parent:hover > .mega-menu,
+	.lean-header .header-menu .menu-item-has-children.mega-menu-parent:focus-within > .mega-menu {
+		display: grid !important;
+	}
+
+	/* Column block */
+	.lean-header .header-menu .mega-menu .mega-col {
+		display: block;
+	}
+
+	/* Column heading (from each child item's Description field) */
+	.lean-header .header-menu .mega-menu .mega-col-title {
+		text-transform: uppercase;
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		color: var(--brand-dark);
+		margin: 0 0 0.75rem 0;
+	}
+
+	/* Link rows inside the columns */
+	.lean-header .header-menu .mega-menu .mega-col a {
+		padding: 0.4rem 0 !important;
+		font-size: 0.95rem !important;
+		border-bottom: none !important;
+		color: #444 !important;
+		white-space: normal;
+	}
+
+	.lean-header .header-menu .mega-menu .mega-col a:hover {
+		color: var(--brand) !important;
+	}
+}
+
+/* Mobile: the existing `.header-menu .sub-menu` mobile rules (already in
+   this file, mobile section ~line 245-273) handle stacking, so the mega
+   panel collapses inside the hamburger automatically. No extra mobile CSS
+   needed. */

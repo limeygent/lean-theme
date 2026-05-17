@@ -315,15 +315,15 @@ function lean_theme_appearance_fields() {
 	<tr>
 		<th scope="row"><label for="primary_color">Primary Color</label></th>
 		<td>
-			<input type="text" name="primary_color" id="primary_color" value="<?php echo esc_attr(get_option('primary_color', '#0d6efd')); ?>" class="regular-text" placeholder="#0d6efd">
-			<p class="description">Used for buttons, links, hero overlay (sets --brand CSS variable)</p>
+			<input type="text" name="primary_color" id="primary_color" value="<?php echo esc_attr(get_option('primary_color')); ?>" class="regular-text" placeholder="#005395">
+			<p class="description">Used for buttons, links, hero overlay (sets --brand CSS variable). Enter a hex value — leave blank for the theme default (<code>#005395</code>). Button text color (black or white) is auto-picked for WCAG contrast.</p>
 		</td>
 	</tr>
 	<tr>
 		<th scope="row"><label for="secondary_color">Accent Color</label></th>
 		<td>
-			<input type="text" name="secondary_color" id="secondary_color" value="<?php echo esc_attr(get_option('secondary_color', '#ffc107')); ?>" class="regular-text" placeholder="#ffc107">
-			<p class="description">Used for callouts, highlights (sets --accent CSS variable)</p>
+			<input type="text" name="secondary_color" id="secondary_color" value="<?php echo esc_attr(get_option('secondary_color')); ?>" class="regular-text" placeholder="#daa520">
+			<p class="description">Used for the .btn-cta CTA button and callouts (sets --accent CSS variable). Enter a hex value (e.g. <code>#ff7a59</code>) — leave blank for the theme default (<code>#daa520</code>). Button text color (black or white) is auto-picked for WCAG contrast.</p>
 		</td>
 	</tr>
 
@@ -730,34 +730,43 @@ function lean_theme_save_settings() {
 // INJECT CUSTOM COLORS AS CSS VARIABLES
 // ──────────────────────────────────────────────────────────────────────────────
 
+// Theme defaults for brand vars. Used when the admin hasn't filled in a custom
+// color. Kept in PHP (not in lean-pages.css) so there is a single :root source
+// of truth — avoids a brief flash of the default color on first paint.
+define('LEAN_DEFAULT_PRIMARY_COLOR', '#005395');
+define('LEAN_DEFAULT_ACCENT_COLOR', '#daa520');
+
 function lean_theme_inject_custom_colors() {
 	$primary_color = get_option('primary_color');
-	$secondary_color = get_option('secondary_color');
+	if (!$primary_color) {
+		$primary_color = LEAN_DEFAULT_PRIMARY_COLOR;
+	}
 
-	if (!$primary_color && !$secondary_color) {
-		return;
+	$secondary_color = get_option('secondary_color');
+	if (!$secondary_color) {
+		$secondary_color = LEAN_DEFAULT_ACCENT_COLOR;
 	}
 
 	echo '<style>:root{';
 
-	if ($primary_color) {
-		// Convert hex to RGB for rgba() usage
-		$rgb = lean_hex_to_rgb($primary_color);
-		echo '--brand:' . esc_attr($primary_color) . ';';
-		echo '--brand-dark:' . esc_attr(lean_adjust_brightness($primary_color, -15)) . ';';
-		echo '--brand-darker:' . esc_attr(lean_adjust_brightness($primary_color, -25)) . ';';
-		if ($rgb) {
-			echo '--brand-rgb:' . esc_attr($rgb['r'] . ',' . $rgb['g'] . ',' . $rgb['b']) . ';';
-		}
+	$rgb = lean_hex_to_rgb($primary_color);
+	echo '--brand:' . esc_attr($primary_color) . ';';
+	echo '--brand-dark:' . esc_attr(lean_adjust_brightness($primary_color, -15)) . ';';
+	echo '--brand-darker:' . esc_attr(lean_adjust_brightness($primary_color, -25)) . ';';
+	if ($rgb) {
+		echo '--brand-rgb:' . esc_attr($rgb['r'] . ',' . $rgb['g'] . ',' . $rgb['b']) . ';';
 	}
+	echo '--brand-fg:' . esc_attr(lean_contrast_color($primary_color)) . ';';
 
-	if ($secondary_color) {
-		echo '--accent:' . esc_attr($secondary_color) . ';';
-	}
+	echo '--accent:' . esc_attr($secondary_color) . ';';
+	echo '--accent-fg:' . esc_attr(lean_contrast_color($secondary_color)) . ';';
 
 	echo '}</style>';
 }
 add_action('wp_head', 'lean_theme_inject_custom_colors');
+// Lean templates bypass wp_head(); the lean_head action fires AFTER lean-pages.css
+// loads, which is required so the injected :root overrides win the cascade.
+add_action('lean_head', 'lean_theme_inject_custom_colors');
 
 /**
  * Convert hex color to RGB array
@@ -775,6 +784,37 @@ function lean_hex_to_rgb($hex) {
 		'g' => hexdec(substr($hex, 2, 2)),
 		'b' => hexdec(substr($hex, 4, 2)),
 	];
+}
+
+/**
+ * Pick a foreground color (white or dark) that maximizes WCAG contrast
+ * against the given background. Returns whichever of #fff or #212529 has
+ * the higher contrast ratio per the WCAG 2.x relative-luminance formula.
+ *
+ * If $hex can't be parsed (e.g. a CSS keyword), returns #212529 as a safe
+ * default that passes against most lightish accent colors.
+ *
+ * @param string $hex Background color (hex, with or without leading #)
+ * @return string '#fff' or '#212529'
+ */
+function lean_contrast_color($hex) {
+	$rgb = lean_hex_to_rgb($hex);
+	if (!$rgb) {
+		return '#212529';
+	}
+
+	// Convert sRGB channel to linear-light, then compute relative luminance.
+	$linear = function ($c) {
+		$c = $c / 255;
+		return $c <= 0.03928 ? $c / 12.92 : pow(($c + 0.055) / 1.055, 2.4);
+	};
+	$L = 0.2126 * $linear($rgb['r']) + 0.7152 * $linear($rgb['g']) + 0.0722 * $linear($rgb['b']);
+
+	// Contrast ratios against pure white (L=1) and against #212529 (L≈0.0125).
+	$contrast_white = (1.0 + 0.05) / ($L + 0.05);
+	$contrast_dark  = ($L + 0.05) / (0.0125 + 0.05);
+
+	return $contrast_white >= $contrast_dark ? '#fff' : '#212529';
 }
 
 /**

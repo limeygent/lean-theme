@@ -47,6 +47,9 @@ require_once LEAN_THEME_DIR . '/inc/disable-features.php';
 // Default menu + News page setup on theme activation
 require_once LEAN_THEME_DIR . '/inc/menu-setup.php';
 
+// Mega-menu walker for multi-column nav dropdowns
+require_once LEAN_THEME_DIR . '/inc/mega-menu-walker.php';
+
 // ──────────────────────────────────────────────────────────────────────────────
 // SHORTCODES
 // ──────────────────────────────────────────────────────────────────────────────

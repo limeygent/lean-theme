@@ -198,6 +198,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 								'container'      => false,
 								'menu_class'     => 'header-menu list-unstyled mb-0',
 								'fallback_cb'    => false,
+								'walker'         => new Lean_Mega_Menu_Walker(),
 							]);
 						}
 						?>

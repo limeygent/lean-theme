@@ -1,5 +1,38 @@
 # Lean Theme Session Log
 
+## Session: 2026-05-11
+
+### Summary
+Added three reusable component classes and one CSS variable to lean-pages.css to support a real-world page conversion (https://southernbailbonds.com/waco → standalone HTML at `~/Desktop/codeprojects/clients/entirelykids/waco.html`). All added with the user's explicit approval before edit.
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `css/lean-pages.css` | Added `--brand-rgb: 0, 83, 149;` to `:root`; added `.step-number` (48px brand-bg numbered circle), `.icon-circle` (56px tinted-brand icon wrapper), `.sticky-cta-mobile` (fixed bottom bar, hidden ≥992px) under new "REUSABLE COMPONENTS" section above FOOTER |
+
+### Why these classes are reusable, not page-specific
+- `.step-number` — every step-by-step service page (How It Works grids, What to Expect lists) needs a numbered brand circle. Recurs across niches.
+- `.icon-circle` — same pattern for any "icon + heading + body" 3-column row. Tinted brand bg uses the new `--brand-rgb`.
+- `.sticky-cta-mobile` — universal mobile-only fixed phone-CTA bar pattern.
+
+### Icon subset gaps surfaced this session
+The 65-icon subset doesn't include several icons that are commonly used in service-page layouts:
+- `bi-check-lg` — use `bi-check2` instead (in subset)
+- `bi-chevron-*` (any chevron) — no equivalent; inline SVG or `bi-arrow-right` rotation
+- `bi-door-open-fill` — closest is `bi-arrow-right`
+- `bi-quote` — use CSS `::before { content: '"' }`
+- `bi-shop`, `bi-bank` — `bi-building` is the closest
+
+If a future page genuinely needs these, expand the subset deliberately (the pattern is documented in this log's 2026-02-11 entry).
+
+### Decisions made
+- Page-specific styling (brand color variables, one-off layout classes, breakpoint-conditional positioning) belongs in the page's `<head>` `<style>` block, NOT in lean-pages.css.
+- The shared theme stays generic; clients override `--brand`/`--accent` at the page level.
+- Memory written to `~/.claude/projects/-Users-nomis/memory/lean-theme-cheatsheet.md` + `feedback-lean-theme-page-discipline.md` capturing the rules and the icon subset list for future sessions.
+
+---
+
 ## Session: 2026-02-11
 
 ### Summary
@@ -383,12 +416,46 @@ Updated the GitHub repo (https://github.com/limeygent/lean-theme) with all enhan
 
 ---
 
-## Next Steps
-1. Commit changes to GitHub
-2. Continue testing on staggsplumbing site
-3. Run PageSpeed Insights again to verify improvements
-4. Create minimal Bootstrap CSS (next PageSpeed optimization)
+## Session: 2026-05-16
+
+### Summary
+CSS variable plumbing for brand/accent colors, mega-menu support for the primary nav, and a round of WCAG/accessibility fixes driven by Lighthouse findings on the Entirely Kids Pediatrics build.
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `inc/mega-menu-walker.php` | `Lean_Mega_Menu_Walker` — custom `Walker_Nav_Menu` that renders a 4-column dropdown when a top-level menu item has the `mega-menu` CSS class. Children grouped by their Description field (= column heading). Defers to default walker for non-mega items. |
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `css/lean-pages.css` | Added `.btn-cta` (CTA button, themed via `--accent`, text color via `--accent-fg`). `.btn-primary` now uses `var(--brand-fg, #fff)` for auto-contrast text. `.hero-overlay` gradient switched from hardcoded `rgba(0,83,149,…)` to `rgba(var(--brand-rgb),…)` so it tracks the configured brand color. Removed unused `--hero-color-1/2`. Removed the `:root { --brand…/--accent }` defaults block (moved to PHP — single source of truth, prevents FOUC). Added `list-style: none !important` to desktop `.sub-menu`. Appended MEGA MENU CSS block (scoped under `.lean-header .header-menu .mega-menu`) with a `::before` hover-bridge to prevent the panel closing in the parent→panel gap. |
+| `inc/settings.php` | `lean_theme_inject_custom_colors()` now always emits the inline `:root` block (uses option or hardcoded default), and emits `--brand-fg` + `--accent-fg`. Added `lean_contrast_color($hex)` helper (WCAG relative-luminance formula → picks `#fff` or `#212529` for max contrast). Hooked into both `wp_head` and `lean_head` (lean templates bypass `wp_head()`). Constants `LEAN_DEFAULT_PRIMARY_COLOR='#005395'` / `LEAN_DEFAULT_ACCENT_COLOR='#daa520'`. Primary/Accent settings inputs no longer preload Bootstrap defaults; placeholders + descriptions advertise the real CSS defaults and the auto-contrast behavior. |
+| `lean-loader.php` | `require_once` for `inc/mega-menu-walker.php` alongside other inc/ includes. |
+| `template-parts/lean-header.php` | Passed `'walker' => new Lean_Mega_Menu_Walker()` to the existing `wp_nav_menu()` call. |
+| `inc/mega-menu-walker.php` | Swapped `<h6 class="mega-col-title">` → `<div class="mega-col-title">` (no `<h>` tag pollution in nav). Removed `role="menu"`, `role="menuitem"`, `role="none"` per a11y patch — those ARIA roles are for app menus, not nav dropdowns, and Lighthouse flagged the parent/child role contract. |
+
+### New Functions
+- `lean_contrast_color($hex)` — returns `#fff` or `#212529`, whichever has higher WCAG contrast against the background. Used to compute `--brand-fg` and `--accent-fg`.
+
+### Key Architectural Decisions
+- **Single source of truth for brand CSS vars** — defaults live in PHP (`LEAN_DEFAULT_*` constants) and are emitted inline in `<head>`. `lean-pages.css` no longer declares them, which eliminates a FOUC where the file's defaults briefly painted before the inline override.
+- **Mega menu = pure CSS** — no JS dependency. `:hover` + `:focus-within` only. Pseudo-element hover bridge solves the parent-to-panel gap caused by `position: static` on the parent `<li>`.
+- **Auto-contrast button text** — any accent/brand the admin picks gets the contrast-correct foreground without per-color CSS edits. Verified with spot-checks against Bootstrap defaults (#0d6efd→white, #ffc107→dark, #198754→white, #dc3545→white) and the EKP coral (#ff7a59→dark).
+
+### Theme Zip
+Rebuilt `~/Desktop/lean-theme.zip` mid-session via `zip -r` from the parent dir with exclusions for `.git`, `.claude*`, `.DS_Store`, `CLAUDE.md`, and the loose scratch HTML mockups.
+
+### PageSpeed (post-session, on live EKP site)
+- FCP ~2.0s. Render-blocking CSS (`bootstrap.css` 35 KB, `lean-pages.css` 17 KB, FA, BI) is the main FCP killer.
+- Bootstrap JS (`bootstrap.bundle.min.js`, 26 KB) is loaded deferred in footer; grep confirmed zero `data-bs-*` usage anywhere in theme. FAQ shortcode uses native `<details>/<summary>` — no Bootstrap JS dependency in theme code. Pending decision: whether to drop the script outright (would break any runtime content authored with Bootstrap-JS components).
+
+### Next Steps
+1. Re-run Lighthouse to confirm the four flagged a11y items (3 ARIA, 1 color-contrast) all clear.
+2. Decide on Bootstrap JS removal (depends on content audit).
+3. FCP path: trim `bootstrap.css` via custom build or PurgeCSS pass — biggest remaining win.
+4. Consider minified `lean-pages.css` shipped alongside source (small FCP nudge).
 
 ---
 
-*Last Updated: 2026-01-27*
+*Last Updated: 2026-05-16*
