@@ -133,7 +133,9 @@ function lean_output_seo_meta_tags() {
 	echo PHP_EOL . '<!-- Dublin Core -->' . PHP_EOL;
 	echo '<meta name="dc.title" content="' . esc_attr($meta_title) . '">' . PHP_EOL;
 	echo '<meta name="dc.description" content="' . esc_attr($meta_description) . '">' . PHP_EOL;
-	echo '<meta name="dc.language" content="en_US">' . PHP_EOL;
+	$lean_lang   = get_option('lean_default_language', 'en-US');
+	$lean_locale = $lean_lang === 'es' ? 'es_ES' : str_replace('-', '_', $lean_lang);
+	echo '<meta name="dc.language" content="' . esc_attr($lean_lang) . '">' . PHP_EOL;
 	if (!empty($meta_keywords) && trim($meta_keywords)) {
 		echo '<meta name="dc.keywords" content="' . esc_attr(trim($meta_keywords)) . '">' . PHP_EOL;
 	}
@@ -142,7 +144,7 @@ function lean_output_seo_meta_tags() {
 	echo PHP_EOL . '<!-- Open Graph -->' . PHP_EOL;
 	echo '<meta property="og:title" content="' . esc_attr($meta_title) . '">' . PHP_EOL;
 	echo '<meta property="og:description" content="' . esc_attr($meta_description) . '">' . PHP_EOL;
-	echo '<meta property="og:locale" content="en_US">' . PHP_EOL;
+	echo '<meta property="og:locale" content="' . esc_attr($lean_locale) . '">' . PHP_EOL;
 	echo '<meta property="og:type" content="article">' . PHP_EOL;
 	echo '<meta property="og:url" content="' . esc_url($canonical_url) . '">' . PHP_EOL;
 	if (!empty($meta_image)) {

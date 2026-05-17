@@ -7,6 +7,35 @@
  */
 
 /* ============================================================================
+   SECTION LAYOUT
+   ----------------------------------------------------------------------------
+   <main> is full-width (no .container at the top level). Wrap each section
+   in a Bootstrap .container so every section aligns at the same site-width.
+
+     Default — card-style content panel:
+       <div class="container">
+         <section class="lean-section">…content…</section>
+       </div>
+
+     Full-bleed hero — spans the viewport, copy stays site-width inside:
+       <section class="hero">
+         <img class="hero-bg" ...>
+         <div class="hero-overlay"></div>
+         <div class="container hero-content">…copy…</div>
+       </section>
+
+     Full-bleed band (e.g. a brand-colored CTA bar with site-width copy):
+       <section class="bg-primary text-white py-5">
+         <div class="container">…content…</div>
+       </section>
+
+   The outer .container ensures every section's left/right edges line up
+   with the header, hero, and any other container-wrapped content.
+   .lean-section provides the white card visual (radius + brand-tinted shadow);
+   omit it if a section just needs site-width copy without the panel look.
+   ============================================================================ */
+
+/* ============================================================================
    FONTS - Local Roboto
    ============================================================================ */
 
@@ -363,31 +392,44 @@ body {
 
 /* ============================================================================
    HERO
+   Full-width hero. Background image + overlay fill the section; .hero-content
+   wraps a .container so the headline copy stays site-width.
+
+     <section class="hero">
+       <img class="hero-bg" ...>
+       <div class="hero-overlay"></div>
+       <div class="container hero-content">…copy…</div>
+     </section>
    ============================================================================ */
 
-#lean-main .hero {
+.hero {
 	position: relative;
+	overflow: hidden;
 	color: #fff;
 	background-color: var(--brand-darker);
 }
 
-#lean-main .hero-bg,
+.hero-bg,
 .hero-overlay {
 	position: absolute;
-	top: 0;
-	left: 50%;
-	transform: translateX(-50%);
-	width: 100vw;
+	inset: 0;
+	width: 100%;
 	height: 100%;
 	pointer-events: none;
 }
 
-#lean-main .hero-overlay {
+.hero-bg {
+	object-fit: cover;
+	object-position: center;
+	z-index: 0;
+}
+
+.hero-overlay {
 	background: linear-gradient(90deg, rgba(var(--brand-rgb),.75) 0%, rgba(var(--brand-rgb),.6) 60%, rgba(var(--brand-rgb),.2) 100%);
 	z-index: 1;
 }
 
-#lean-main .hero-content {
+.hero-content {
 	position: relative;
 	z-index: 2;
 }
@@ -470,6 +512,15 @@ body {
 
 /* ============================================================================
    SECTIONS
+   The default page section is a white "card" floating on the page background.
+   Drop it inside a .container so its edges align with all other site-width
+   content (header, hero, trust strip, etc.):
+
+       <div class="container">
+         <section class="lean-section">…</section>
+       </div>
+
+   See the SECTION LAYOUT comment at the top of this file for full patterns.
    ============================================================================ */
 
 .section {
@@ -477,29 +528,18 @@ body {
 	overflow: hidden;
 }
 
-/* Effect around sections to make them stand out */
 .lean-section {
-	background: white;
-	margin-top: 4rem;
+	background: #fff;
+	margin: 4rem 0;
 	padding: 3rem 2rem;
 	border-radius: 12px;
-	box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-/* Bottom breathing room for the last .lean-section before the footer */
-.lean-section:not(:has(~ .lean-section)) {
-	margin-bottom: 4rem;
-}
-
-.container.lean-section {
-	padding: 3rem 2rem;
-	margin: 4rem auto;
+	box-shadow: 0 4px 24px rgba(var(--brand-rgb), 0.15);
 }
 
 @media (max-width: 768px) {
 	.lean-section {
 		padding: 2rem 1rem;
-		margin: 1rem 0;
+		margin: 2rem 0;
 	}
 }
 
@@ -517,13 +557,13 @@ body {
 
 /* ============================================================================
    BLOG POST HERO
-   Full-bleed featured image with title overlay on single posts.
+   Full-width featured image with title overlay on single posts. <main> is
+   no longer constrained, so no breakout math is needed.
    ============================================================================ */
 
 .blog-hero {
-	margin-left: calc(-50vw + 50%);
-	margin-right: calc(-50vw + 50%);
-	width: 100vw;
+	position: relative;
+	overflow: hidden;
 }
 .blog-hero-img {
 	width: 100%;
@@ -536,17 +576,6 @@ body {
 	.blog-hero-img {
 		aspect-ratio: 4 / 3;
 	}
-}
-
-/* ============================================================================
-   LEAN SECTION
-   Generic vertical-rhythm wrapper. Override padding/colors in Customizer
-   "Additional CSS" if you want a different look per site.
-   ============================================================================ */
-
-.lean-section {
-	padding-top: 3rem;
-	padding-bottom: 3rem;
 }
 
 /* ============================================================================

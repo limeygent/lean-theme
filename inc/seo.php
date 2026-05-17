@@ -68,6 +68,37 @@ function lean_seo_post_types() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// LANGUAGE / LOCALE: site default + per-page override
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns the BCP 47 language code for the current page.
+ * Per-page meta wins; falls back to the theme setting; falls back to en-US.
+ * Use this for the <html lang> attribute, hreflang, and dc.language.
+ */
+function lean_get_page_language() {
+	if (is_singular()) {
+		$override = get_post_meta(get_queried_object_id(), '_lean_meta_language', true);
+		if (!empty($override)) {
+			return $override;
+		}
+	}
+	return get_option('lean_default_language', 'en-US');
+}
+
+/**
+ * Returns the Facebook og:locale value (underscore format) for the current page.
+ * Maps bare `es` to `es_ES` because Facebook's accepted locale list has no bare `es`.
+ */
+function lean_get_page_locale() {
+	$lang = lean_get_page_language();
+	if ($lang === 'es') {
+		return 'es_ES';
+	}
+	return str_replace('-', '_', $lang);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // FRONTEND OUTPUT: SEO Meta Tags (called directly in head.php)
 // ──────────────────────────────────────────────────────────────────────────────
 function lean_output_seo_meta_tags() {
@@ -145,7 +176,7 @@ function lean_output_seo_meta_tags() {
 	echo PHP_EOL . '<!-- Dublin Core Meta Tags -->' . PHP_EOL;
 	echo '<meta name="dc.title" content="' . esc_attr($meta_title) . '">' . PHP_EOL;
 	echo '<meta name="dc.description" content="' . esc_attr($meta_description) . '">' . PHP_EOL;
-	echo '<meta name="dc.language" content="en_US">' . PHP_EOL;
+	echo '<meta name="dc.language" content="' . esc_attr(lean_get_page_language()) . '">' . PHP_EOL;
 	if (!empty($meta_keywords) && trim($meta_keywords)) {
 		echo '<meta name="dc.keywords" content="' . esc_attr(trim($meta_keywords)) . '">' . PHP_EOL;
 	}
@@ -154,7 +185,7 @@ function lean_output_seo_meta_tags() {
 	echo PHP_EOL . '<!-- Open Graph Meta Tags -->' . PHP_EOL;
 	echo '<meta property="og:title" content="' . esc_attr($meta_title) . '">' . PHP_EOL;
 	echo '<meta property="og:description" content="' . esc_attr($meta_description) . '">' . PHP_EOL;
-	echo '<meta property="og:locale" content="en_US">' . PHP_EOL;
+	echo '<meta property="og:locale" content="' . esc_attr(lean_get_page_locale()) . '">' . PHP_EOL;
 	echo '<meta property="og:type" content="article">' . PHP_EOL;
 	echo '<meta property="og:url" content="' . esc_url($canonical_url) . '">' . PHP_EOL;
 	if (!empty($meta_image)) {
@@ -186,6 +217,7 @@ function lean_add_meta_seo_fields($post) {
 	$meta_noindex     = get_post_meta($post->ID, '_lean_meta_noindex', true);
 	$meta_nofollow    = get_post_meta($post->ID, '_lean_meta_nofollow', true);
 	$meta_keywords    = get_post_meta($post->ID, '_lean_meta_keywords', true);
+	$meta_language    = get_post_meta($post->ID, '_lean_meta_language', true);
 	?>
 	<div class="postbox">
 		<h3>SEO Meta Settings</h3>
@@ -204,6 +236,16 @@ function lean_add_meta_seo_fields($post) {
 			<input type="text" id="lean_meta_keywords" name="lean_meta_keywords"
 				   value="<?php echo esc_attr($meta_keywords); ?>"
 				   style="width:100%;margin:0.5em 0;">
+
+			<label for="lean_meta_language"><strong>Language</strong> (overrides site default for this page only)</label>
+			<select id="lean_meta_language" name="lean_meta_language" style="width:100%;margin:0.5em 0;">
+				<option value="">— Use site default —</option>
+				<option value="en-US" <?php selected($meta_language, 'en-US'); ?>>English (United States) — en-US</option>
+				<option value="en-GB" <?php selected($meta_language, 'en-GB'); ?>>English (United Kingdom) — en-GB</option>
+				<option value="en-AU" <?php selected($meta_language, 'en-AU'); ?>>English (Australia) — en-AU</option>
+				<option value="es"    <?php selected($meta_language, 'es');    ?>>Spanish — es</option>
+				<option value="es-MX" <?php selected($meta_language, 'es-MX'); ?>>Spanish (Mexico) — es-MX</option>
+			</select>
 
 			<div style="margin-top:1em;">
 				<label>
@@ -265,6 +307,10 @@ function lean_save_seo_fields($post_id, $post, $update) {
 		$kw  = (string) wp_unslash($_POST['lean_meta_keywords']);
 		$arr = array_filter(array_map('sanitize_text_field', array_map('trim', explode(',', $kw))));
 		update_post_meta($post_id, '_lean_meta_keywords', implode(', ', $arr));
+	}
+
+	if (isset($_POST['lean_meta_language'])) {
+		update_post_meta($post_id, '_lean_meta_language', sanitize_text_field(wp_unslash($_POST['lean_meta_language'])));
 	}
 
 	update_post_meta($post_id, '_lean_meta_noindex', isset($_POST['lean_meta_noindex']) ? '1' : '');

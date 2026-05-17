@@ -7,7 +7,7 @@
  */
 ?>
 <!doctype html>
-<html <?php language_attributes(); ?>>
+<html lang="<?php echo esc_attr(lean_get_page_language()); ?>">
 	<head>
 		<?php lean_get_template_part('template-parts/lean-head'); ?>
 	</head>
@@ -15,4 +15,4 @@
 	<body <?php body_class('lean-body'); ?>>
 		<?php lean_get_template_part('template-parts/lean-header'); ?>
 
-		<main id="lean-main" class="lean-main container" tabindex="-1">
+		<main id="lean-main" class="lean-main" tabindex="-1">

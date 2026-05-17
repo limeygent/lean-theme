@@ -81,7 +81,8 @@ $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https'
 $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 ?>
 <!-- Alternate Language Links -->
-<link rel="alternate" href="<?php echo esc_url($currentUrl); ?>" hreflang="en">
+<?php $page_lang = function_exists('lean_get_page_language') ? lean_get_page_language() : 'en-US'; ?>
+<link rel="alternate" href="<?php echo esc_url($currentUrl); ?>" hreflang="<?php echo esc_attr($page_lang); ?>">
 <link rel="alternate" href="<?php echo esc_url($currentUrl); ?>" hreflang="x-default">
 
 <?php if (function_exists('lean_output_seo_meta_tags')) lean_output_seo_meta_tags(); ?>

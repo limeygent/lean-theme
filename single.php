@@ -31,15 +31,15 @@ while ( have_posts() ) : the_post();
 		</section>
 	<?php endif; ?>
 
-	<section class="lean-section">
-		<div class="container">
+	<div class="container">
+		<section class="lean-section">
 			<article>
 				<?php echo do_shortcode('[blog_review_notice]'); ?>
 				<?php the_content(); ?>
 				<?php echo do_shortcode('[blog_post_interlink]'); ?>
 			</article>
-		</div>
-	</section>
+		</section>
+	</div>
 <?php
 endwhile;
 

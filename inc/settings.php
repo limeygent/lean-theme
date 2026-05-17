@@ -175,6 +175,23 @@ function lean_theme_business_fields() {
 			<p class="description">Google My Business profile image URL (for map overlay)</p>
 		</td>
 	</tr>
+	<tr>
+		<th scope="row"><label for="lean_default_language">Default Site Language</label></th>
+		<td>
+			<?php $current_lang = get_option('lean_default_language', 'en-US'); ?>
+			<select name="lean_default_language" id="lean_default_language">
+				<option value="en-US" <?php selected($current_lang, 'en-US'); ?>>English (United States) — en-US</option>
+				<option value="en-GB" <?php selected($current_lang, 'en-GB'); ?>>English (United Kingdom) — en-GB</option>
+				<option value="en-AU" <?php selected($current_lang, 'en-AU'); ?>>English (Australia) — en-AU</option>
+				<option value="es"    <?php selected($current_lang, 'es');    ?>>Spanish — es (generic, inclusive of all variants)</option>
+				<option value="es-MX" <?php selected($current_lang, 'es-MX'); ?>>Spanish (Mexico) — es-MX</option>
+			</select>
+			<p class="description">
+				Sets the <code>&lt;html lang&gt;</code>, <code>hreflang</code>, <code>og:locale</code>, and <code>dc.language</code> values for every page.
+				Override per page from the SEO Settings meta box.
+			</p>
+		</td>
+	</tr>
 	<?php
 }
 
@@ -632,6 +649,7 @@ function lean_theme_save_settings() {
 		'business_city', 'business_state', 'business_zip', 'business_county',
 		'google_maps_cid', 'google_kgid', 'gtm_container_id', 'ga4_measurement_id', 'clarity_project_id',
 		'primary_color', 'secondary_color',
+		'lean_default_language',
 		'lean_menu_location',
 		'header_top_mode', 'header_top_bg', 'header_top_text',
 		'header_main_bg', 'header_nav_text', 'dropdown_bg', 'dropdown_text',
