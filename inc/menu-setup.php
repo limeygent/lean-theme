@@ -187,6 +187,32 @@ function lean_legal_pages_migrations() {
 		}
 		update_option('lean_legal_migration_003', 1);
 	}
+
+	// Migration 004: flip the outer wrapper so the .container is the outer
+	// element and <section class="lean-section"> the inner one, matching the
+	// theme's documented section pattern (css/lean-pages.css).
+	if (!get_option('lean_legal_migration_004')) {
+		foreach (['terms-of-use', 'privacy-policy', 'accessibility'] as $slug) {
+			$page = get_page_by_path($slug);
+			if (!$page) continue;
+			$content = $page->post_content;
+			$updated = str_replace(
+				[
+					"<section class=\"lean-section\">\n<div class=\"container\">",
+					"</div>\n</section>",
+				],
+				[
+					"<div class=\"container\">\n<section class=\"lean-section\">",
+					"</section>\n</div>",
+				],
+				$content
+			);
+			if ($updated !== $content) {
+				wp_update_post(['ID' => $page->ID, 'post_content' => $updated]);
+			}
+		}
+		update_option('lean_legal_migration_004', 1);
+	}
 }
 
 /**
