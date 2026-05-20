@@ -1,6 +1,9 @@
 # Ignore archive folder
 /archive/
 
+# Claude session context (local only)
+/.claude-context/
+
 # OS files
 .DS_Store
 Thumbs.db
