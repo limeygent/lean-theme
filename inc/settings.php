@@ -473,6 +473,7 @@ function lean_theme_hours_fields() {
 			<p class="description" style="font-size:13px;">
 				Set business hours for each day. Leave a day blank to mark it as closed.
 				Use the <strong>second set</strong> only if you close mid-day (e.g., for a lunch break).
+				Tick <strong>24 hrs</strong> to mark a day as open around the clock — this overrides any times set for that day.
 				Output via the <code>[business_hours]</code> shortcode (already placed in Footer Widget 4 by default).
 				Timezone follows your <a href="<?php echo esc_url(admin_url('options-general.php')); ?>">WordPress site timezone</a>.
 			</p>
@@ -481,28 +482,33 @@ function lean_theme_hours_fields() {
 	<tr>
 		<th scope="row">Hours of Operation</th>
 		<td>
-			<table class="widefat striped" style="max-width:780px;">
+			<table class="widefat striped lean-hours-admin" style="max-width:840px;">
 				<thead>
 					<tr>
 						<th style="width:110px;">Day</th>
 						<th style="width:80px;">Closed</th>
+						<th style="width:80px;">24 hrs</th>
 						<th>Set 1 (open – close)</th>
 						<th>Set 2 (optional)</th>
 					</tr>
 				</thead>
 				<tbody>
 				<?php foreach ($days as $key => $label):
-					$day = isset($hours[$key]) ? $hours[$key] : ['closed' => false, 'sets' => []];
+					$day = isset($hours[$key]) ? $hours[$key] : ['closed' => false, 'is_24h' => false, 'sets' => []];
 					$closed = !empty($day['closed']);
+					$is_24h = !empty($day['is_24h']);
 					$set1_open  = isset($day['sets'][0]['open'])  ? $day['sets'][0]['open']  : '';
 					$set1_close = isset($day['sets'][0]['close']) ? $day['sets'][0]['close'] : '';
 					$set2_open  = isset($day['sets'][1]['open'])  ? $day['sets'][1]['open']  : '';
 					$set2_close = isset($day['sets'][1]['close']) ? $day['sets'][1]['close'] : '';
 				?>
-					<tr>
+					<tr data-day-row="<?php echo esc_attr($key); ?>">
 						<td><strong><?php echo esc_html($label); ?></strong></td>
 						<td>
-							<input type="checkbox" name="business_hours[<?php echo $key; ?>][closed]" value="1" <?php checked($closed); ?>>
+							<input type="checkbox" class="lean-hours-closed" name="business_hours[<?php echo $key; ?>][closed]" value="1" <?php checked($closed); ?>>
+						</td>
+						<td>
+							<input type="checkbox" class="lean-hours-24h" name="business_hours[<?php echo $key; ?>][is_24h]" value="1" <?php checked($is_24h); ?>>
 						</td>
 						<td>
 							<input type="time" name="business_hours[<?php echo $key; ?>][set1_open]"  value="<?php echo esc_attr($set1_open); ?>">
@@ -518,6 +524,21 @@ function lean_theme_hours_fields() {
 				<?php endforeach; ?>
 				</tbody>
 			</table>
+			<script>
+			(function(){
+				function syncRow(row) {
+					var closed = row.querySelector('.lean-hours-closed');
+					var is24   = row.querySelector('.lean-hours-24h');
+					var times  = row.querySelectorAll('input[type="time"]');
+					var disable = (closed && closed.checked) || (is24 && is24.checked);
+					times.forEach(function(el){ el.disabled = disable; el.style.opacity = disable ? 0.45 : 1; });
+					if (is24 && is24.checked && closed) closed.disabled = true; else if (closed) closed.disabled = false;
+					if (closed && closed.checked && is24) is24.disabled = true; else if (is24) is24.disabled = false;
+				}
+				var rows = document.querySelectorAll('.lean-hours-admin tr[data-day-row]');
+				rows.forEach(function(row){ syncRow(row); row.addEventListener('change', function(){ syncRow(row); }); });
+			})();
+			</script>
 		</td>
 	</tr>
 	<?php
@@ -729,7 +750,9 @@ function lean_theme_save_settings() {
 		$clean = [];
 		foreach ($valid_days as $key) {
 			$row = $_POST['business_hours'][$key] ?? [];
-			$closed = !empty($row['closed']);
+			$is_24h = !empty($row['is_24h']);
+			// 24 hrs overrides closed (and times); never both at once
+			$closed = !$is_24h && !empty($row['closed']);
 			$sets = [];
 			foreach ([1, 2] as $n) {
 				$open  = isset($row["set{$n}_open"])  ? trim($row["set{$n}_open"])  : '';
@@ -738,7 +761,7 @@ function lean_theme_save_settings() {
 					$sets[] = ['open' => $open, 'close' => $close];
 				}
 			}
-			$clean[$key] = ['closed' => $closed, 'sets' => $sets];
+			$clean[$key] = ['closed' => $closed, 'is_24h' => $is_24h, 'sets' => $sets];
 		}
 		update_option('business_hours', $clean);
 	}

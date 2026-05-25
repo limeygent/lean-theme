@@ -318,15 +318,18 @@ add_shortcode('business_hours', function() {
 		</div>
 		<div class="hours-grid mb-3">
 			<?php foreach ($days as $key => $label):
-				$row = isset($hours[$key]) ? $hours[$key] : ['closed' => false, 'sets' => []];
+				$row = isset($hours[$key]) ? $hours[$key] : ['closed' => false, 'is_24h' => false, 'sets' => []];
 				$is_today = ($key === $today_key);
-				$closed = !empty($row['closed']) || empty($row['sets']);
+				$is_24h = !empty($row['is_24h']);
+				$closed = !$is_24h && (!empty($row['closed']) || empty($row['sets']));
 				?>
 				<div class="hours-row<?php echo $is_today ? ' is-today' : ''; ?>" data-day="<?php echo esc_attr($key); ?>">
 					<span class="day"><?php echo esc_html($label); ?></span>
-					<span class="time<?php echo $closed ? ' closed' : ''; ?>">
+					<span class="time<?php echo $closed ? ' closed' : ''; ?><?php echo $is_24h ? ' open-24h' : ''; ?>">
 						<?php
-						if ($closed) {
+						if ($is_24h) {
+							echo 'Open 24 hours';
+						} elseif ($closed) {
 							echo 'Closed';
 						} else {
 							$parts = [];
@@ -378,6 +381,9 @@ add_shortcode('business_hours', function() {
 		function compute() {
 			var t = nowParts();
 			var today = HOURS[DAY_KEYS[t.dayIdx]];
+			if (today && today.is_24h) {
+				return { open: true, text: 'Open 24 Hours' };
+			}
 			if (today && !today.closed && today.sets && today.sets.length) {
 				for (var i = 0; i < today.sets.length; i++) {
 					var s = today.sets[i];
@@ -395,6 +401,9 @@ add_shortcode('business_hours', function() {
 			for (var d = 1; d <= 7; d++) {
 				var nextIdx = (t.dayIdx + d) % 7;
 				var next = HOURS[DAY_KEYS[nextIdx]];
+				if (next && next.is_24h) {
+					return { open: false, text: 'Opens ' + DAY_NAMES[nextIdx] + ' (24 hours)' };
+				}
 				if (next && !next.closed && next.sets && next.sets.length) {
 					return { open: false, text: 'Opens ' + DAY_NAMES[nextIdx] + ' at ' + fmt(next.sets[0].open) };
 				}
