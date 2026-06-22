@@ -65,6 +65,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="preconnect" href="https://www.clarity.ms" crossorigin>
 <?php endif; ?>
 
+<!-- Preload the body font (Roboto) so font-display:optional finds it within its ~100ms
+     window and actually USES it (otherwise the webfont times out -> fallback locked in,
+     "webfont not used"). No ?ver: the href must match the @font-face src exactly, and
+     crossorigin is required for font fetches or the browser double-downloads. -->
+<link rel="preload" href="<?php echo $theme_rel; ?>/assets/fonts/roboto/roboto-v49-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="<?php echo $theme_rel; ?>/assets/fonts/roboto/roboto-v49-latin-700.woff2" as="font" type="font/woff2" crossorigin>
 
 <!-- Favicon -->
 <link rel="shortcut icon" href="/favicon.ico" />
@@ -88,9 +94,23 @@ $currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'
 
 <?php if (function_exists('lean_output_seo_meta_tags')) lean_output_seo_meta_tags(); ?>
 
-<?php if ($hero_image && !empty($hero_image['url'])): ?>
+<?php
+// Preload the LCP hero image. Prefer the ACF hero; otherwise detect a CSS-background
+// hero (<div class="hero-bg" style="background:url()">) in the current page content.
+// wp_head() is bypassed by this template, so this is where the hero preload must live.
+$lean_hero_url = ($hero_image && !empty($hero_image['url'])) ? $hero_image['url'] : '';
+if (!$lean_hero_url) {
+	$lean_qo = get_queried_object();
+	if ($lean_qo instanceof WP_Post
+		&& strpos($lean_qo->post_content, 'hero-bg') !== false
+		&& preg_match('/<(?:div|section)\b[^>]*\bhero-bg\b[^>]*>/i', $lean_qo->post_content, $lean_tag)
+		&& preg_match('/url\(\s*(?:&quot;|&#0?34;|["\']?)\s*([^)"\'\s]+\.(?:webp|avif|jpe?g|png))/i', $lean_tag[0], $lean_m)) {
+		$lean_hero_url = html_entity_decode($lean_m[1]);
+	}
+}
+if ($lean_hero_url): ?>
 <!-- Preload hero image (LCP element) -->
-<link rel="preload" href="<?php echo esc_url($hero_image['url']); ?>" as="image" fetchpriority="high">
+<link rel="preload" href="<?php echo esc_url($lean_hero_url); ?>" as="image" fetchpriority="high">
 <?php endif; ?>
 
 <!-- Preload CSS files for parallel download -->
