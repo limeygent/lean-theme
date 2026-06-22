@@ -50,6 +50,12 @@ require_once LEAN_THEME_DIR . '/inc/menu-setup.php';
 // Mega-menu walker for multi-column nav dropdowns
 require_once LEAN_THEME_DIR . '/inc/mega-menu-walker.php';
 
+// Performance: LCP fetchpriority on hero image
+require_once LEAN_THEME_DIR . '/inc/performance.php';
+
+// Performance: auto-import tuned Perfmatters settings on theme activation
+require_once LEAN_THEME_DIR . '/inc/perfmatters-defaults.php';
+
 // ──────────────────────────────────────────────────────────────────────────────
 // SHORTCODES
 // ──────────────────────────────────────────────────────────────────────────────

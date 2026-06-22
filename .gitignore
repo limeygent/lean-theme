@@ -16,3 +16,6 @@ Thumbs.db
 
 # WordPress
 wp-config.php
+
+# Local task list (not shipped)
+/TODO.md

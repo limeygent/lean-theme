@@ -1,7 +1,16 @@
 <?php
+// Disable WordPress core XML sitemaps at /wp-sitemap.xml
+add_filter('wp_sitemaps_enabled', '__return_false');
 
-// Disable default WP sitemaps
-add_filter( 'wp_sitemaps_enabled', '__return_false' );
+// Redirect common sitemap URLs to the custom sitemap index
+add_action('init', function () {
+    $request_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+    if ($request_path === '/sitemap.xml' || $request_path === '/wp-sitemap.xml') {
+        wp_redirect(home_url('/sitemap_index.xml'), 301);
+        exit;
+    }
+});
 
 // ─── Sitemap index ─────────────────────────────────────────────────────────
 function pageone_generate_sitemap_index() {

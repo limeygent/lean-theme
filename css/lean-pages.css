@@ -43,7 +43,9 @@
 	font-family: 'Roboto';
 	font-style: normal;
 	font-weight: 400;
-	font-display: swap;
+	/* optional (not swap) = no fallback->Roboto swap mid-load, so no font-driven CLS.
+	   Preload the woff2 so first paint still uses Roboto; repeat visits hit cache. */
+	font-display: optional;
 	src: url('../assets/fonts/roboto/roboto-v49-latin-regular.woff2') format('woff2');
 }
 
@@ -51,7 +53,7 @@
 	font-family: 'Roboto';
 	font-style: normal;
 	font-weight: 700;
-	font-display: swap;
+	font-display: optional;
 	src: url('../assets/fonts/roboto/roboto-v49-latin-700.woff2') format('woff2');
 }
 
@@ -374,20 +376,45 @@ body {
 	}
 }
 
+.lean-header .header-logo {
+	max-width: 40%;
+	min-width: 0;
+}
+
 .lean-header .header-logo img {
-	height: 60px;
+	max-width: 100%;
+	max-height: 60px;
+	height: auto;
 	width: auto;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
+	.lean-header .header-logo {
+		max-width: none;
+	}
 	.lean-header .header-logo img {
-		height: 100px;
+		max-height: 100px;
 	}
 }
 
 .lean-header .btn {
-	padding: 0.5rem;
+	padding: 0.5rem 0.75rem;
 	font-size: 1rem;
+	white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+	.lean-header .btn {
+		padding: 0.5rem 1rem;
+		font-size: 0.95rem;
+	}
+}
+
+@media (max-width: 374.98px) {
+	.lean-header .btn {
+		padding: 0.4rem 0.75rem;
+		font-size: 0.85rem;
+	}
 }
 
 /* ============================================================================
@@ -565,17 +592,31 @@ body {
 	position: relative;
 	overflow: hidden;
 }
+/* Show the FULL featured image with no crop. The branded hero images carry their
+   own title banner + logo, so display at natural aspect ratio (no forced 21:9 / 4:3
+   + object-fit:cover, which sliced the top banner and bottom logo strip off). */
 .blog-hero-img {
+	display: block;
 	width: 100%;
 	height: auto;
-	max-height: 70vh;
-	object-fit: cover;
-	aspect-ratio: 21 / 9;
+	/* Reserve the box before the image loads to prevent layout shift (CLS). 800/446
+	   is the real image ratio, so this does NOT crop (matches height:auto exactly). */
+	aspect-ratio: 800 / 446;
 }
-@media (max-width: 767px) {
-	.blog-hero-img {
-		aspect-ratio: 4 / 3;
-	}
+/* The branded image already shows the title (top banner) and logo (bottom strip),
+   so the theme's visual title overlay would cover them. Make it screen-reader-only:
+   the title text stays in the DOM for SEO/accessibility, but the visual bar is hidden.
+   Posts WITHOUT a featured image still show their title via the .blog-hero.bg-dark branch. */
+.blog-hero > .position-absolute {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
 }
 
 /* ============================================================================
@@ -727,3 +768,129 @@ body {
    this file, mobile section ~line 245-273) handle stacking, so the mega
    panel collapses inside the hamburger automatically. No extra mobile CSS
    needed. */
+
+/* ============================================================================
+   LANDING-PAGE COMPONENTS
+   ----------------------------------------------------------------------------
+   Reusable, brand-neutral building blocks for marketing/landing pages.
+   All themed via var(--brand)/var(--accent); brand color comes from theme
+   settings. Reuses existing atoms: .hero*, .section, .step-number,
+   .icon-circle, .badge-trust, .btn-primary, .btn-warning.
+   ============================================================================ */
+
+/* Section heading rhythm (replaces page-level body{color:var(--brand)}) */
+.section h2 { color: var(--brand); font-weight: 700; }
+
+/* Hero button sizing */
+.hero .btn { padding: .75rem 1.5rem; font-weight: 600; }
+
+/* TRUST STRIP — row of credibility items under a hero */
+.trust-strip { background: #fff; border-bottom: 1px solid rgba(var(--brand-rgb), .12); padding: 1.25rem 0; }
+.trust-strip .strip-row { display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: center; justify-content: center; }
+.trust-strip .strip-item { display: inline-flex; align-items: center; gap: .55rem; color: #444; font-weight: 600; font-size: .92rem; line-height: 1.1; }
+.trust-strip .strip-item i { color: var(--brand); font-size: 1.4rem; flex-shrink: 0; }
+.trust-strip .strip-item .label-sub { display: block; font-size: .72rem; font-weight: 500; color: #777; letter-spacing: .04em; text-transform: uppercase; }
+@media (max-width: 575px) { .trust-strip .strip-row { gap: .75rem 1.25rem; } }
+
+/* SYMPTOM CARD — icon + heading + copy problem/feature card */
+.symptom-card { background: #fff; border-radius: 12px; padding: 1.5rem; height: 100%; box-shadow: 0 2px 10px rgba(0,0,0,.05); border: 1px solid rgba(var(--brand-rgb), .1); transition: transform .2s ease, box-shadow .2s ease; }
+.symptom-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+.symptom-card .symptom-icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(var(--brand-rgb), .08); color: var(--brand); display: inline-flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: .9rem; }
+.symptom-card h3 { font-size: 1.05rem; font-weight: 700; color: var(--brand); margin-bottom: .4rem; line-height: 1.3; }
+.symptom-card p { font-size: .92rem; color: #555; line-height: 1.5; margin-bottom: 0; }
+
+/* WHY (feature trio + credibility footer). Reuses .icon-circle (sized up here). */
+.why-feature { text-align: center; padding: 0 .5rem; }
+.why-feature .icon-circle { width: 64px; height: 64px; margin-bottom: 1rem; }
+.why-feature .icon-circle i { font-size: 1.75rem; }
+.why-feature h3 { font-size: 1.2rem; font-weight: 700; color: var(--brand); margin-bottom: .6rem; }
+.why-feature p { color: #444; line-height: 1.55; margin-bottom: 0; }
+.why-credibility { margin-top: 2.5rem; padding: 1rem 1.25rem; background: rgba(var(--brand-rgb), .05); border-left: 4px solid var(--brand); border-radius: 0 8px 8px 0; font-size: .95rem; color: #333; }
+.why-credibility i { color: var(--brand); margin-right: .35rem; }
+.why-credibility .cred-sep { color: #aaa; margin: 0 .55rem; }
+
+/* SYSTEM CARD — tier / plan / package comparison card */
+.system-card { position: relative; border: 1px solid rgba(var(--brand-rgb), .15); border-radius: 12px; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.06); transition: transform .2s ease, box-shadow .2s ease; height: 100%; display: flex; flex-direction: column; }
+.system-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,.1); }
+.system-card .system-head { background: var(--brand); color: #fff; padding: 1.1rem 1.4rem; border-radius: 12px 12px 0 0; }
+.system-card .system-head .tier { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+.system-card .system-head .system-name { font-size: 1.55rem; font-weight: 700; line-height: 1.1; margin: .2rem 0 0; }
+.system-card .system-head .head-sub { font-size: .85rem; opacity: .8; margin-top: .15rem; }
+.system-card .system-body { padding: 1.25rem 1.4rem; color: #444; flex: 1 1 auto; display: flex; flex-direction: column; }
+.system-card .feature-row { padding: .7rem 0; border-bottom: 1px solid #eee; }
+.system-card .feature-row:first-of-type { padding-top: 0; }
+.system-card .feature-row:last-of-type { border-bottom: 0; }
+.system-card .feature-label { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); margin-bottom: .2rem; }
+.system-card .feature-val { font-size: .92rem; line-height: 1.4; }
+.system-card.is-popular { border: 2px solid var(--accent); }
+.system-card .popular-ribbon { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--accent); color: var(--accent-fg, #000); font-weight: 700; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .9rem; border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.15); white-space: nowrap; }
+.system-card .warranty-line { display: flex; align-items: center; color: var(--brand); font-weight: 600; font-size: .92rem; margin: .85rem 0 1rem; }
+.system-card .warranty-line i { margin-right: .45rem; font-size: 1.1rem; }
+
+/* SHARED SPECS — note strip beneath a card row */
+.shared-specs { margin-top: 2.5rem; padding: 1.25rem 1.5rem; background: #fff; border: 1px solid rgba(var(--brand-rgb), .15); border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; font-size: .95rem; color: #333; line-height: 1.55; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+.shared-specs strong { color: var(--brand); }
+
+/* STAT ROW — big-number metrics band */
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; max-width: 880px; margin: 0 auto 2.5rem; }
+.stat-cell { text-align: center; padding: 1rem .5rem; }
+.stat-cell .num { font-size: 2rem; font-weight: 800; color: var(--brand); line-height: 1; }
+.stat-cell .label { font-size: .82rem; color: #555; margin-top: .35rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+@media (max-width: 575px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+
+/* REVIEW CARD — testimonial */
+.review-card { background: #fff; border-radius: 12px; padding: 1.5rem; height: 100%; box-shadow: 0 2px 10px rgba(0,0,0,.06); border: 1px solid rgba(var(--brand-rgb), .1); }
+.review-card .stars { color: #ffa41c; font-size: 1.05rem; letter-spacing: .12em; margin-bottom: .75rem; }
+.review-card .quote { color: #333; line-height: 1.6; font-size: .98rem; margin-bottom: 1rem; }
+.review-card .reviewer { font-weight: 700; color: var(--brand); font-size: .92rem; }
+.review-card .city { font-weight: 500; color: #777; font-size: .85rem; }
+
+/* PLATFORM ROW — review-platform badges */
+.platform-row { margin-top: 2.5rem; padding: 1.25rem 1.25rem; background: #fff; border-radius: 10px; border: 1px solid rgba(var(--brand-rgb), .12); display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: center; justify-content: center; }
+.platform-badge { display: inline-flex; align-items: center; gap: .55rem; color: #333; font-weight: 600; font-size: .92rem; }
+.platform-badge i { font-size: 1.4rem; color: var(--brand); }
+.platform-badge .rating { color: #ffa41c; font-weight: 700; }
+
+/* PROCESS STEP — numbered step. Reuses .step-number (sized up here). */
+.process-step { text-align: center; padding: 0 .5rem; position: relative; }
+.process-step .step-number { width: 56px; height: 56px; font-size: 1.4rem; margin: 0 auto 1rem; }
+.process-step h3 { font-size: 1.05rem; font-weight: 700; color: var(--brand); margin-bottom: .4rem; }
+.process-step p { color: #444; font-size: .92rem; line-height: 1.55; margin-bottom: 0; }
+
+/* CREDENTIAL TILE — badge grid item */
+.credential-tile { background: #fff; border-radius: 10px; padding: 1.25rem 1rem; text-align: center; height: 100%; border: 1px solid rgba(var(--brand-rgb), .12); box-shadow: 0 2px 8px rgba(0,0,0,.04); transition: transform .2s ease, box-shadow .2s ease; }
+.credential-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,.08); }
+.credential-tile .cred-icon { font-size: 2rem; color: var(--brand); margin-bottom: .55rem; line-height: 1; }
+.credential-tile .cred-name { font-weight: 700; color: var(--brand); font-size: .98rem; margin-bottom: .25rem; line-height: 1.25; }
+.credential-tile .cred-detail { font-size: .82rem; color: #666; line-height: 1.4; }
+
+/* ALSO-CALLOUT — secondary/adjacent service note (accent left border, white) */
+.also-callout { background: #fff; border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); height: 100%; }
+.also-callout h3 { font-size: 1.1rem; font-weight: 700; color: var(--brand); margin-bottom: .5rem; }
+.also-callout p { color: #444; line-height: 1.55; margin-bottom: 0; font-size: .95rem; }
+
+/* SERVICE AREA BAND — tinted full-width strip */
+.service-area-band { background: rgba(var(--brand-rgb), .06); padding: 2rem 0; text-align: center; }
+
+/* BRAND BAND — full-width brand-colored CTA section */
+.brand-band { background: var(--brand); color: #fff; }
+.brand-band h2 { color: #fff; }
+.brand-band p { color: #fff; opacity: .95; }
+
+/* FAQ ACCORDION — brand the Bootstrap accordion */
+.accordion-button:not(.collapsed) { background: rgba(var(--brand-rgb), .08); color: var(--brand); }
+.accordion-button:focus { box-shadow: none; }
+.accordion-button { font-weight: 600; }
+
+/* FAQ — ADA <details>/<summary> pattern (.faq-item / .faq-body) */
+.faq-item summary { cursor: pointer; font-weight: 700; color: var(--brand); list-style-position: outside; }
+.faq-item summary:hover { color: var(--brand-dark); }
+.faq-item summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.faq-item[open] summary { margin-bottom: .5rem; }
+.faq-item .faq-body h3 { font-size: 1.05rem; font-weight: 700; color: var(--brand); margin-bottom: .5rem; }
+.faq-item .faq-body p { color: #444; line-height: 1.6; }
+.faq-item .faq-body p:last-child { margin-bottom: 0; }
+
+@media (max-width: 991px) {
+	.system-card .system-name { font-size: 1.4rem; }
+}

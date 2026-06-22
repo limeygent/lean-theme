@@ -1,6 +1,7 @@
 /*!
- * Bootstrap Icons v1.11.3 — Subset for Staggs Plumbing
- * 66 icons (~4KB) vs full library (~86KB CSS)
+ * Bootstrap Icons v1.11.3 — curated subset for lean-theme landing pages
+ * 80 icons vs full library (~86KB CSS); full font (woff2/woff) is loaded,
+ * so adding a glyph here only needs its content mapping (no font change).
  * Font files: /fonts/bootstrap-icons.woff2 + .woff
  */
 
@@ -25,7 +26,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 66 icons — alphabetical */
+/* base 66 icons — alphabetical (landing-page additions appended at end) */
 .bi-arrow-repeat::before { content: "\f130"; }
 .bi-arrow-right::before { content: "\f138"; }
 .bi-award-fill::before { content: "\f153"; }
@@ -92,3 +93,18 @@
 .bi-x-circle::before { content: "\f623"; }
 .bi-yelp::before { content: "\f82a"; }
 .bi-twitter-x::before { content: "\f8db"; }
+/* added for landing-page components (full font already loaded) */
+.bi-arrow-down-up::before { content: "\f127"; }
+.bi-bar-chart-fill::before { content: "\f17a"; }
+.bi-border-width::before { content: "\f1b3"; }
+.bi-bricks::before { content: "\f1ca"; }
+.bi-building-fill::before { content: "\f876"; }
+.bi-clipboard-check-fill::before { content: "\f71b"; }
+.bi-diagram-3-fill::before { content: "\f2ed"; }
+.bi-door-closed-fill::before { content: "\f305"; }
+.bi-globe-americas::before { content: "\f882"; }
+.bi-grid-3x3-gap-fill::before { content: "\f3f8"; }
+.bi-hammer::before { content: "\f3ff"; }
+.bi-mortarboard-fill::before { content: "\f6fd"; }
+.bi-rulers::before { content: "\f523"; }
+.bi-trophy-fill::before { content: "\f5e6"; }
