@@ -113,11 +113,11 @@ if ($lean_hero_url): ?>
 <link rel="preload" href="<?php echo esc_url($lean_hero_url); ?>" as="image" fetchpriority="high">
 <?php endif; ?>
 
-<!-- Preload CSS files for parallel download -->
-<link rel="preload" href="<?php echo $theme_rel; ?>/css/bootstrap.css?ver=<?php echo $bootstrap_css_ver; ?>" as="style">
-<link rel="preload" href="<?php echo $theme_rel; ?>/css/lean-pages.css?ver=<?php echo $lean_css_ver; ?>" as="style">
-<link rel="preload" href="<?php echo $theme_rel; ?>/css/fontawesome-minimal.css?ver=<?php echo $fa_css_ver; ?>" as="style">
-<link rel="preload" href="<?php echo $theme_rel; ?>/css/bootstrap-icons.min.css?ver=<?php echo $bi_css_ver; ?>" as="style">
+<!-- NB: CSS <link rel="preload"> hints intentionally removed. When Perfmatters
+     "Remove Unused CSS" is active it inlines the used CSS and delays the full
+     stylesheets, so preloading them just triggers "preloaded but not used" console
+     warnings and wastes bandwidth. The blocking <link rel="stylesheet"> tags below
+     are what Perfmatters processes; without Perfmatters they still load fine. -->
 
 <!-- Apply stylesheets (blocking for FOUC prevention) -->
 <link rel="stylesheet" href="<?php echo $theme_rel; ?>/css/bootstrap.css?ver=<?php echo $bootstrap_css_ver; ?>">
