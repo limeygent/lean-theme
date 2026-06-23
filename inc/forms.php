@@ -311,6 +311,12 @@ function lean_forms_shortcode($atts = array()) {
 		'show_phone'  => 'true',
 		'show_address'=> 'false',
 		'columns'     => '',
+
+		// WebMCP (declarative). Annotations only — agent fills, user submits.
+		// Emitted only when an Origin Trial token is configured (see lean_webmcp_enabled()).
+		'webmcp'             => 'true',
+		'webmcp_tool'        => 'request_service_estimate',
+		'webmcp_description' => '',
 	), $atts);
 
 	$show_phone   = filter_var($a['show_phone'], FILTER_VALIDATE_BOOLEAN);
@@ -333,51 +339,75 @@ function lean_forms_shortcode($atts = array()) {
 
 	$btn_size = $a['size'] ? 'btn-' . $a['size'] : '';
 
+	// Unique IDs so multiple [lean_form] instances on one page don't collide.
+	static $lean_form_instance = 0;
+	$lean_form_instance++;
+	$form_id    = 'lean-form-' . $lean_form_instance;
+	$wrapper_id = 'lean-form-wrapper-' . $lean_form_instance;
+
+	// Declarative WebMCP <form> attributes (empty string when disabled/unavailable).
+	$webmcp_attrs = '';
+	if (filter_var($a['webmcp'], FILTER_VALIDATE_BOOLEAN) && function_exists('lean_webmcp_form_attrs')) {
+		$webmcp_attrs = lean_webmcp_form_attrs(array(
+			'tool'        => $a['webmcp_tool'],
+			'description' => $a['webmcp_description'],
+			'page_title'  => $page_title,
+		));
+	}
+	// True only when WebMCP is actually emitting for this form (token present + not opted out).
+	// When active, the honeypot is rendered off-schema so it never becomes a WebMCP tool param.
+	$webmcp_active = ($webmcp_attrs !== '');
+
 	ob_start();
 	?>
+	<?php if ($lean_form_instance === 1): // class-based, so only print the shared styles once ?>
 	<style>
-	#lean-form .hp { position: absolute; left: -9999px; }
-	#lean-form .btn:disabled { opacity: 0.65; cursor: not-allowed; }
-	#lean-form-wrapper .form-fields { transition: opacity 0.3s ease; }
-	#lean-form-wrapper .form-fields.hiding { opacity: 0; }
+	.lean-form .hp { position: absolute; left: -9999px; }
+	.lean-form .btn:disabled { opacity: 0.65; cursor: not-allowed; }
+	.lean-form-wrapper .form-fields { transition: opacity 0.3s ease; }
+	.lean-form-wrapper .form-fields.hiding { opacity: 0; }
+	/* WebMCP: highlight the form while an agent is interacting with it. */
+	form:tool-form-active { outline: 2px dashed currentColor; outline-offset: 4px; }
 	</style>
+	<?php endif; ?>
 
 	<?php if ($a['columns']): ?>
 	<div class="row justify-content-center">
 	<div class="<?php echo esc_attr($a['columns']); ?>">
 	<?php endif; ?>
 
-	<div id="lean-form-wrapper">
-		<form id="lean-form" class="needs-validation" novalidate
+	<div id="<?php echo esc_attr($wrapper_id); ?>" class="lean-form-wrapper">
+		<form id="<?php echo esc_attr($form_id); ?>" class="lean-form needs-validation" novalidate
+			  <?php echo $webmcp_attrs; ?>
 			  data-page-slug="<?php echo esc_attr($page_slug); ?>"
 			  data-page-title="<?php echo esc_attr($page_title); ?>">
 
 			<div class="form-fields">
 				<!-- Name -->
 				<div class="form-group mb-3">
-					<label for="lean-name" class="sr-only visually-hidden">Your name</label>
-					<input type="text" id="lean-name" name="name" class="form-control"
+					<label for="<?php echo esc_attr($form_id); ?>-name" class="sr-only visually-hidden">Your name</label>
+					<input type="text" id="<?php echo esc_attr($form_id); ?>-name" name="name" class="form-control"
 						   placeholder="Your name *" required minlength="2"
-						   autocomplete="name">
+						   autocomplete="name"<?php echo function_exists('lean_webmcp_param_attr') ? lean_webmcp_param_attr('name') : ''; ?>>
 					<div class="invalid-feedback">Please enter your name</div>
 				</div>
 
 				<!-- Email -->
 				<div class="form-group mb-3">
-					<label for="lean-email" class="sr-only visually-hidden">Your email</label>
-					<input type="email" id="lean-email" name="email" class="form-control"
+					<label for="<?php echo esc_attr($form_id); ?>-email" class="sr-only visually-hidden">Your email</label>
+					<input type="email" id="<?php echo esc_attr($form_id); ?>-email" name="email" class="form-control"
 						   placeholder="Your email *" required
-						   autocomplete="email">
+						   autocomplete="email"<?php echo function_exists('lean_webmcp_param_attr') ? lean_webmcp_param_attr('email') : ''; ?>>
 					<div class="invalid-feedback">Please enter a valid email</div>
 				</div>
 
 				<?php if ($show_phone): ?>
 				<!-- Phone -->
 				<div class="form-group mb-3">
-					<label for="lean-phone" class="sr-only visually-hidden">Your phone</label>
-					<input type="tel" id="lean-phone" name="phone" class="form-control"
+					<label for="<?php echo esc_attr($form_id); ?>-phone" class="sr-only visually-hidden">Your phone</label>
+					<input type="tel" id="<?php echo esc_attr($form_id); ?>-phone" name="phone" class="form-control"
 						   placeholder="Your phone *" required minlength="10"
-						   autocomplete="tel">
+						   autocomplete="tel"<?php echo function_exists('lean_webmcp_param_attr') ? lean_webmcp_param_attr('phone') : ''; ?>>
 					<div class="invalid-feedback">Please enter a valid phone number</div>
 				</div>
 				<?php endif; ?>
@@ -385,24 +415,29 @@ function lean_forms_shortcode($atts = array()) {
 				<?php if ($show_address): ?>
 				<!-- Address -->
 				<div class="form-group mb-3">
-					<label for="lean-address" class="sr-only visually-hidden">Service address</label>
-					<input type="text" id="lean-address" name="address" class="form-control"
+					<label for="<?php echo esc_attr($form_id); ?>-address" class="sr-only visually-hidden">Service address</label>
+					<input type="text" id="<?php echo esc_attr($form_id); ?>-address" name="address" class="form-control"
 						   placeholder="Service address (optional)"
-						   autocomplete="street-address">
+						   autocomplete="street-address"<?php echo function_exists('lean_webmcp_param_attr') ? lean_webmcp_param_attr('address') : ''; ?>>
 				</div>
 				<?php endif; ?>
 
 				<!-- Message -->
 				<div class="form-group mb-3">
-					<label for="lean-message" class="sr-only visually-hidden">Your message</label>
-					<textarea id="lean-message" name="message" class="form-control"
-							  placeholder="How can we help you? *" required rows="4"></textarea>
+					<label for="<?php echo esc_attr($form_id); ?>-message" class="sr-only visually-hidden">Your message</label>
+					<textarea id="<?php echo esc_attr($form_id); ?>-message" name="message" class="form-control"
+							  placeholder="How can we help you? *" required rows="4"<?php echo function_exists('lean_webmcp_param_attr') ? lean_webmcp_param_attr('message') : ''; ?>></textarea>
 					<div class="invalid-feedback">Please enter your message</div>
 				</div>
 
-				<!-- Honeypot -->
+				<!-- Honeypot. When WebMCP is active the trap is rendered OFF-SCHEMA:
+				     no `name` attribute (so it is never exposed as a WebMCP tool
+				     parameter an agent could fill, which would silently discard a
+				     real lead); the JS submit handler reads `data-hp` and appends
+				     the value as `website`. When WebMCP is inactive we keep the
+				     classic named honeypot for maximum non-JS-bot coverage. -->
 				<div class="hp" aria-hidden="true">
-					<input type="text" name="website" tabindex="-1" autocomplete="off">
+					<input type="text" <?php echo $webmcp_active ? 'data-hp="website"' : 'name="website"'; ?> tabindex="-1" autocomplete="off">
 				</div>
 
 				<!-- Submit -->
@@ -423,11 +458,11 @@ function lean_forms_shortcode($atts = array()) {
 
 	<script>
 	(function() {
-		var form = document.getElementById('lean-form');
+		var form = document.getElementById('<?php echo esc_js($form_id); ?>');
 		if (!form || form.dataset.initialized) return;
 		form.dataset.initialized = 'true';
 
-		var wrapper = document.getElementById('lean-form-wrapper');
+		var wrapper = document.getElementById('<?php echo esc_js($wrapper_id); ?>');
 		var fields = form.querySelector('.form-fields');
 		var msg = wrapper.querySelector('.form-message');
 		var btn = form.querySelector('button[type="submit"]');
@@ -456,7 +491,9 @@ function lean_forms_shortcode($atts = array()) {
 			data.append('name', form.querySelector('[name="name"]').value);
 			data.append('email', form.querySelector('[name="email"]').value);
 			data.append('message', form.querySelector('[name="message"]').value);
-			data.append('website', form.querySelector('[name="website"]').value);
+			// Honeypot: named when WebMCP is off, off-schema (data-hp) when WebMCP is on.
+			var hp = form.querySelector('[name="website"], [data-hp="website"]');
+			data.append('website', hp ? hp.value : '');
 
 			var phone = form.querySelector('[name="phone"]');
 			if (phone) data.append('phone', phone.value);

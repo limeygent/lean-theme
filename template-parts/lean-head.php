@@ -46,6 +46,7 @@ $clarity_id = get_option('clarity_project_id', '');
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="<?php echo esc_attr(get_option('header_top_bg', '#f8f9fa')); ?>" />
+<?php if (function_exists('lean_webmcp_origin_trial_meta')) lean_webmcp_origin_trial_meta(); // WebMCP declarative API enablement (no-op when no token set) ?>
 
 <?php if ($gtm_id): ?>
 <!-- Google Tag Manager -->

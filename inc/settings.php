@@ -434,6 +434,15 @@ function lean_theme_form_fields() {
 			</label>
 		</td>
 	</tr>
+	<tr>
+		<th scope="row"><label for="lean_webmcp_origin_trial_token">WebMCP Origin Trial Token</label></th>
+		<td>
+			<input type="text" name="lean_webmcp_origin_trial_token" id="lean_webmcp_origin_trial_token" value="<?php echo esc_attr(get_option('lean_webmcp_origin_trial_token', '')); ?>" class="large-text">
+			<p class="description">
+				Optional, off by default. Paste this site's per-origin <a href="https://developer.chrome.com/docs/ai/webmcp/declarative-api" target="_blank" rel="noopener">declarative WebMCP</a> Origin Trial token to make the Lean contact form an agent-callable tool (in-browser AI agents can then fill it; the visitor still submits). <strong>Until a token is saved here, no WebMCP attributes are emitted at all</strong> &mdash; this is an explicit opt-in because it turns a public lead form into an automatable tool. Register at the <a href="https://developer.chrome.com/origintrials/" target="_blank" rel="noopener">Chrome Origin Trials</a> console (token is tied to this exact domain). Agent-readiness only &mdash; not a performance or SEO signal, no PageSpeed impact.
+			</p>
+		</td>
+	</tr>
 	<?php
 }
 
@@ -675,7 +684,8 @@ function lean_theme_save_settings() {
 		'header_top_mode', 'header_top_bg', 'header_top_text',
 		'header_main_bg', 'header_nav_text', 'dropdown_bg', 'dropdown_text',
 		'footer_bg', 'footer_text',
-		'form_success_message', 'form_error_message'
+		'form_success_message', 'form_error_message',
+		'lean_webmcp_origin_trial_token'
 	);
 
 	foreach ($text_fields as $field) {

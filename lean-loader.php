@@ -32,6 +32,9 @@ require_once LEAN_THEME_DIR . '/inc/cpts.php';
 // SEO: Meta box, admin columns, frontend output
 require_once LEAN_THEME_DIR . '/inc/seo.php';
 
+// Declarative WebMCP helpers (must load before forms.php — the form renderer calls these)
+require_once LEAN_THEME_DIR . '/inc/lean-webmcp.php';
+
 // Contact form system (shortcode, handler, admin viewer)
 require_once LEAN_THEME_DIR . '/inc/forms.php';
 
