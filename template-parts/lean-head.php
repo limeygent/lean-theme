@@ -84,16 +84,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <?php endif; ?>
 
 <?php
-// Canonical and hreflang
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$currentUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+// SEO <head> tags — title, description, canonical, robots, hreflang, Open Graph,
+// Twitter, JSON-LD — are owned by the NerdPress SEO plugin and emitted via the
+// lean_head action (do_action('lean_head') below). The plugin's hreflang is keyed
+// to the canonical permalink and configurable in NerdPress SEO settings, so the
+// theme no longer emits its own alternate links (those were duplicate and pointed
+// at the non-canonical request URL). If the plugin is absent, lean-loader.php's
+// lean_head fallback supplies a basic title/description/canonical/robots block.
 ?>
-<!-- Alternate Language Links -->
-<?php $page_lang = function_exists('lean_get_page_language') ? lean_get_page_language() : 'en-US'; ?>
-<link rel="alternate" href="<?php echo esc_url($currentUrl); ?>" hreflang="<?php echo esc_attr($page_lang); ?>">
-<link rel="alternate" href="<?php echo esc_url($currentUrl); ?>" hreflang="x-default">
-
-<?php if (function_exists('lean_output_seo_meta_tags')) lean_output_seo_meta_tags(); ?>
 
 <?php
 // Preload the LCP hero image. Prefer the ACF hero; otherwise detect a CSS-background
