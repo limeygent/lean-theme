@@ -27,5 +27,20 @@ All notable changes to this project will be documented in this file.
   classic named honeypot is retained when WebMCP is inactive.
 
 ### Fixed
+- **Empty `<head>` when NerdPress SEO is inactive** (2026-07-01) — Lean templates bypass
+  `wp_head()`, so with the plugin missing, deactivated, or half-loaded a page shipped no
+  `<title>`, description, canonical, or robots at all (`lean-head.php` has no `<title>` of its
+  own). New `lean_fallback_head_seo()` on the `lean_head` hook emits a basic
+  title/description/canonical/robots block. Keyed on `nerdpress_output_lean_head()` existing,
+  so it stays silent — no duplicate tags — whenever the plugin is active.
+- **Duplicate `hreflang` alternate links** (2026-07-01) — `template-parts/lean-head.php`
+  emitted its own `rel="alternate"` hreflang on every page, duplicating NerdPress SEO's on
+  singular views and pointing at the non-canonical request URL. The plugin now solely owns
+  hreflang, keyed to the canonical permalink and configurable in its settings. Non-singular
+  Lean pages no longer emit hreflang — expected for single-language sites.
 
 ### Removed
+- The theme's hardcoded `hreflang` alternate-link block and the dead
+  `lean_output_seo_meta_tags()` call from `template-parts/lean-head.php` (retired theme SEO
+  function; head SEO is owned by the NerdPress SEO plugin, which now lives in its own repo at
+  https://github.com/limeygent/nerdpress-seo).
