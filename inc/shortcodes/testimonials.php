@@ -43,8 +43,9 @@ echo '<div class="items-grid" role="region" aria-label="Customer testimonials">'
         $post_id = get_the_ID();
         $reviewer_name = get_the_title();
         $review_content = get_the_content();
-        $review_link = get_field('review_link', $post_id);
-        $review_rating = get_field('review_rating', $post_id) ?: 5; // Default to 5 if no rating field
+        $review_link = get_post_meta($post_id, 'review_link', true);
+        $review_rating = get_post_meta($post_id, 'review_rating', true) ?: 5; // Default to 5 if unset
+        $review_rating = max(1, min(5, (int) $review_rating));
         $date_published = get_the_date('c'); // ISO 8601 format
 
         echo '<div class="items-card" itemscope itemtype="https://schema.org/Review">';
@@ -91,9 +92,9 @@ echo '<div class="items-grid" role="region" aria-label="Customer testimonials">'
         }
         echo '</div>';
 
-        // Review rating (assumes a custom field 'review_rating' or defaults to 5)
+        // Review rating (from the testimonial's review_rating meta, 1–5)
         echo '<div itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">';
-        echo '<meta itemprop="ratingValue" content="5">';
+        echo '<meta itemprop="ratingValue" content="' . esc_attr($review_rating) . '">';
         echo '<meta itemprop="bestRating" content="5">';
         echo '<meta itemprop="worstRating" content="1">';
         echo '</div>';

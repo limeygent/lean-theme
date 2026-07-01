@@ -26,11 +26,20 @@ define('LEAN_THEME_URL', get_template_directory_uri());
 // CORE FUNCTIONALITY
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Custom Post Types (Testimonials)
-require_once LEAN_THEME_DIR . '/inc/cpts.php';
+// Custom Post Types (Testimonials) are registered by the required NerdPress SEO
+// plugin, which ships `testimonials` as a built-in default. The [testimonials]
+// shortcode (inc/shortcodes/testimonials.php) queries it.
 
-// SEO: Meta box, admin columns, frontend output
-require_once LEAN_THEME_DIR . '/inc/seo.php';
+// SEO (meta box, admin columns, front-end <head>) and XML sitemaps are provided
+// by the REQUIRED NerdPress SEO plugin — the theme no longer loads its legacy
+// inc/seo.php or inc/sitemaps.php. Warn if the plugin is missing.
+add_action('admin_notices', 'lean_require_nerdpress_notice');
+function lean_require_nerdpress_notice() {
+	if ( defined('NERDPRESS_VERSION') ) {
+		return;
+	}
+	echo '<div class="notice notice-error"><p><strong>Lean Theme:</strong> the <strong>NerdPress SEO</strong> plugin is required for SEO meta tags and XML sitemaps — please install and activate it.</p></div>';
+}
 
 // Declarative WebMCP helpers (must load before forms.php — the form renderer calls these)
 require_once LEAN_THEME_DIR . '/inc/lean-webmcp.php';
@@ -40,9 +49,6 @@ require_once LEAN_THEME_DIR . '/inc/forms.php';
 
 // Business settings & shortcodes (name, phone, address, colors)
 require_once LEAN_THEME_DIR . '/inc/settings.php';
-
-// Custom XML sitemaps
-require_once LEAN_THEME_DIR . '/inc/sitemaps.php';
 
 // Disable features (feeds, search)
 require_once LEAN_THEME_DIR . '/inc/disable-features.php';

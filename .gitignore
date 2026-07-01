@@ -1,6 +1,10 @@
 # Ignore archive folder
 /archive/
 
+# NerdPress SEO plugin — developed here for now, will move to its own repo.
+# (Retired theme code lives in /_archive/, which IS kept in git.)
+/plugin/
+
 # Claude session context (local only)
 /.claude-context/
 
