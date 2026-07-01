@@ -76,6 +76,41 @@ require_once LEAN_THEME_DIR . '/inc/shortcodes.php';
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Front-end <head> SEO fallback for when the NerdPress SEO plugin is missing,
+ * inactive, or only half-loaded. Lean templates bypass wp_head(), so the plugin
+ * is the ONLY source of <title>/description/canonical/robots on those pages —
+ * without this, a plugin-less site would ship pages with an empty <head>.
+ *
+ * Keyed on the plugin's own output function rather than a version constant, so a
+ * plugin that failed to fully load (missing include) still degrades gracefully.
+ * When the plugin is present it owns the head block via its own lean_head hook
+ * and this stays silent, so there are never duplicate tags.
+ */
+add_action('lean_head', 'lean_fallback_head_seo', 1);
+function lean_fallback_head_seo() {
+	if (function_exists('nerdpress_output_lean_head')) {
+		return; // plugin present and functional — it owns the head
+	}
+
+	echo '<title>' . esc_html(wp_get_document_title()) . '</title>' . "\n";
+
+	if (is_singular()) {
+		$queried = get_queried_object();
+		if ($queried instanceof WP_Post) {
+			$desc = has_excerpt($queried)
+				? get_the_excerpt($queried)
+				: wp_trim_words(wp_strip_all_tags($queried->post_content), 30, '…');
+			if ($desc !== '') {
+				echo '<meta name="description" content="' . esc_attr($desc) . '">' . "\n";
+			}
+			echo '<link rel="canonical" href="' . esc_url(get_permalink($queried)) . '">' . "\n";
+		}
+	}
+
+	echo '<meta name="robots" content="' . (get_option('blog_public') ? 'index, follow' : 'noindex, nofollow') . '">' . "\n";
+}
+
+/**
  * Output WP Customizer "Additional CSS" on lean pages via lean_head hook
  */
 add_action('lean_head', 'lean_output_customizer_css');
