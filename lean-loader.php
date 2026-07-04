@@ -145,8 +145,28 @@ function lean_theme_setup() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// TEMPLATE PART HELPER
+// TEMPLATE HELPERS
 // ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns the BCP 47 language code for the current page, used by header.php for
+ * the <html lang> attribute. Per-page meta wins; falls back to the theme's
+ * `lean_default_language` option; falls back to en-US.
+ *
+ * Theme-owned on purpose: the SEO→NerdPress migration retired inc/seo.php (where
+ * this used to live), but the <html lang> attribute is a theme-template concern,
+ * not an SEO-plugin one. This reads only DB values (option + post meta) via core
+ * WP functions, so it carries no dependency on the plugin.
+ */
+function lean_get_page_language() {
+	if (is_singular()) {
+		$override = get_post_meta(get_queried_object_id(), '_lean_meta_language', true);
+		if (!empty($override)) {
+			return $override;
+		}
+	}
+	return get_option('lean_default_language', 'en-US');
+}
 
 /**
  * Include a template part by slug relative to the theme directory.
