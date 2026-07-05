@@ -105,8 +105,17 @@ function lean_hero_bg_preload() {
 }
 
 /**
- * Stamp fetchpriority="high" on the first <img class="hero-bg"> in content and strip any
- * loading="lazy" a filter added, so the LCP candidate is high-priority and never lazy.
+ * Give the first <img class="hero-bg"> (the LCP candidate) its three LCP hints:
+ *   - fetchpriority="high"  — fetch it ahead of other subresources.
+ *   - no loading="lazy"     — never defer the LCP image.
+ *   - decoding="sync"       — WordPress stamps decoding="async" on every content image,
+ *     which lets the browser present the frame WITHOUT the hero and paint it once the
+ *     async decode is eventually scheduled (~2s under load). PSI reports that deferred
+ *     paint as a large "element render delay" — reproducible across hosts, with TBT 0,
+ *     because decode is client-side and off the main thread. Sync decode paints the hero
+ *     as soon as its bytes arrive. Runs at priority 20 (after core's wp_filter_content_tags
+ *     adds decoding="async"), so the override sticks.
+ *
  * Runs on the_content, so it applies on every template in both modes.
  *
  * @param string $content
@@ -126,6 +135,12 @@ function lean_hero_bg_lcp_hints($content) {
 				$attrs .= ' fetchpriority="high"';
 			}
 			$attrs = preg_replace('/\s+loading="lazy"/i', '', $attrs);
+			// Force synchronous decode on the LCP hero (override WP's decoding="async").
+			if (preg_match('/\bdecoding\s*=\s*(["\']).*?\1/i', $attrs)) {
+				$attrs = preg_replace('/\bdecoding\s*=\s*(["\']).*?\1/i', 'decoding="sync"', $attrs);
+			} else {
+				$attrs .= ' decoding="sync"';
+			}
 			return '<img' . $attrs . '>';
 		},
 		$content,
