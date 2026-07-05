@@ -94,30 +94,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 ?>
 
 <?php
-// Preload the LCP hero image. Prefer the ACF hero; otherwise detect an in-content hero
-// in either form: a CSS-background hero (<div class="hero-bg" style="background:url()">)
-// or an <img class="hero-bg" src="..."> hero (what inc/performance.php stamps
-// fetchpriority onto). wp_head() is bypassed here, so the hero preload must live here.
+// Standalone emit point for the LCP hero preload. wp_head() is bypassed here, so this is
+// where the preload must live in standalone mode (it lands early — before the stylesheets
+// below — which is exactly where the preload scanner wants it). Prefer the ACF/query-var
+// hero passed to this template; otherwise fall back to in-content detection, which is
+// owned by lean_hero_image_url() in inc/performance.php (single source of truth, shared
+// with the integration-mode wp_head path). lean_emit_hero_preload() de-dupes per request.
 $lean_hero_url = ($hero_image && !empty($hero_image['url'])) ? $hero_image['url'] : '';
-if (!$lean_hero_url) {
-	$lean_qo = get_queried_object();
-	if ($lean_qo instanceof WP_Post && strpos($lean_qo->post_content, 'hero-bg') !== false) {
-		// (a) CSS-background hero: <div|section class="hero-bg" style="...url()...">
-		if (preg_match('/<(?:div|section)\b[^>]*\bhero-bg\b[^>]*>/i', $lean_qo->post_content, $lean_tag)
-			&& preg_match('/url\(\s*(?:&quot;|&#0?34;|["\']?)\s*([^)"\'\s]+\.(?:webp|avif|jpe?g|png))/i', $lean_tag[0], $lean_m)) {
-			$lean_hero_url = html_entity_decode($lean_m[1]);
-		}
-		// (b) <img class="hero-bg" src="..."> hero (attribute order-independent)
-		elseif (preg_match('/<img\b[^>]*\bhero-bg\b[^>]*>/i', $lean_qo->post_content, $lean_tag)
-			&& preg_match('/\bsrc\s*=\s*["\']([^"\']+\.(?:webp|avif|jpe?g|png))/i', $lean_tag[0], $lean_m)) {
-			$lean_hero_url = html_entity_decode($lean_m[1]);
-		}
-	}
+if (!$lean_hero_url && function_exists('lean_hero_image_url')) {
+	$lean_hero_url = lean_hero_image_url(get_queried_object());
 }
-if ($lean_hero_url): ?>
-<!-- Preload hero image (LCP element) -->
-<link rel="preload" href="<?php echo esc_url($lean_hero_url); ?>" as="image" fetchpriority="high">
-<?php endif; ?>
+if (function_exists('lean_emit_hero_preload')) {
+	echo '<!-- Preload hero image (LCP element) -->' . "\n";
+	lean_emit_hero_preload($lean_hero_url);
+} elseif ($lean_hero_url) {
+	// Defensive fallback if performance.php didn't load for some reason.
+	echo '<link rel="preload" href="' . esc_url($lean_hero_url) . '" as="image" fetchpriority="high">' . "\n";
+}
+?>
 
 <!-- NB: CSS <link rel="preload"> hints intentionally removed. When Perfmatters
      "Remove Unused CSS" is active it inlines the used CSS and delays the full
