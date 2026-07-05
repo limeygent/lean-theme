@@ -12,11 +12,28 @@ owns all frontend optimization (RUCSS, defer/delay JS). See Part 3 for per-host 
 
 ## TL;DR — the levers that actually move the score
 
-1. **Every image is WebP and right-sized.** Convert JP/PNG → WebP, compress, and serve at ~display size (not 900px in a 680px slot). The LCP image matters most.
-2. **The LCP element must be discoverable + high priority.** If the hero is a CSS `background:url()`, it is invisible to the preload scanner — preload it (the theme now does this automatically; see below).
-3. **Fonts: `font-display: optional` + preload.** `optional` gives zero CLS but the webfont must arrive in ~100 ms or it is dropped ("webfont not used"). Preloading makes it land in time.
-4. **Perfmatters: Remove Unused CSS = Inline, Defer + Delay JS.** This is what kills render-blocking. The host page cache (Breeze / SG Optimizer) does caching only.
-5. **Subset icon/glyph fonts** to the glyphs actually used.
+1. **Full-bleed marketing hero = CSS-background `<div class="hero-bg">`, NOT `<img class="hero-bg">`.** This is the single biggest lever and the least obvious — see "Hero patterns" below. An `<img>` hero *becomes* the measured LCP element; a background `<div>` isn't an LCP candidate, so the (fast) heading text is LCP instead. The theme preloads both forms, so the background image still loads early.
+2. **Every image is WebP, right-sized, AND lazy-loaded below the fold.** Convert JPG/PNG → WebP, compress, serve at ~display size. Hand-coded content `<img>` without `width`/`height` do NOT get WP's auto-lazy → they load eagerly and saturate Slow-4G. Give them dimensions (Media Library) so WP lazy-loads them.
+3. **The LCP element must be discoverable + high priority.** If the hero is a CSS `background:url()`, it is invisible to the preload scanner — preload it (the theme does this automatically; see below).
+4. **Fonts: `font-display: optional` + preload.** `optional` gives zero CLS but the webfont must arrive in ~100 ms or it is dropped ("webfont not used"). Preloading makes it land in time.
+5. **Perfmatters: Remove Unused CSS = Inline, Defer + Delay JS.** This is what kills render-blocking. The host page cache (Breeze / SG Optimizer) does caching only.
+6. **Subset icon/glyph fonts** to the glyphs actually used.
+
+---
+
+## Hero patterns — the #1 LCP gotcha (learned the hard way)
+
+The theme supports three hero forms. **Which one you use decides what Chrome measures as the LCP element**, and that is worth more than any amount of preload/decode/format tuning on the hero itself.
+
+| Hero form | Markup | LCP element | Use for |
+|---|---|---|---|
+| **CSS background** ✅ | `<div class="hero-bg" style="background:url()">` | the **heading text** (Chrome doesn't count CSS backgrounds as LCP) → fast | **full-bleed marketing heroes** (centered headline + CTA over image) |
+| **Responsive `<img>`** ✅ | `the_post_thumbnail(... 'blog-hero-img')` → `srcset`/`sizes`, wide, in-flow | the image, but small/responsive so it's genuinely fast | **blog post banners** (handled by `single.php`) |
+| **Non-responsive `<img>`** ❌ | hand-coded `<img class="hero-bg">`, no `srcset`, `object-fit:cover` | the **full-size image** → measured directly → slow on throttled mobile | (avoid) |
+
+**The trap:** an `<img class="hero-bg">` is *technically* the modern best practice (preloadable, discoverable), so it's tempting — but it promotes the image to *the measured LCP element*. On a throttled phone a big `object-fit:cover` image behind an overlay takes ~2s to rasterize/composite → "element render delay" → LCP 4.5–5s → score stuck in the high-70s/low-80s. Proven the hard way: the same render delay reproduced on **two different hosts** (SiteGround *and* Cloudways), so it was never the server — it was the hero being an `<img>`.
+
+**The fix:** for a full-bleed hero, use the CSS-background `<div>`. The image isn't the LCP (the heading is), yet the theme still preloads it (`fetchpriority=high`), so it loads early — best of both. Same-site A/B: a `<div>`-background service hero scored 95 (LCP 2.7s) while an `<img>` hero of the *same design* scored 83 (LCP 4.7s), with a **bigger** background JPG. Only reach for an `<img>` hero when it's the wide, responsive blog-hero pattern.
 
 ---
 
