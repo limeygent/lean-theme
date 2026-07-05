@@ -94,17 +94,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 ?>
 
 <?php
-// Preload the LCP hero image. Prefer the ACF hero; otherwise detect a CSS-background
-// hero (<div class="hero-bg" style="background:url()">) in the current page content.
-// wp_head() is bypassed by this template, so this is where the hero preload must live.
+// Preload the LCP hero image. Prefer the ACF hero; otherwise detect an in-content hero
+// in either form: a CSS-background hero (<div class="hero-bg" style="background:url()">)
+// or an <img class="hero-bg" src="..."> hero (what inc/performance.php stamps
+// fetchpriority onto). wp_head() is bypassed here, so the hero preload must live here.
 $lean_hero_url = ($hero_image && !empty($hero_image['url'])) ? $hero_image['url'] : '';
 if (!$lean_hero_url) {
 	$lean_qo = get_queried_object();
-	if ($lean_qo instanceof WP_Post
-		&& strpos($lean_qo->post_content, 'hero-bg') !== false
-		&& preg_match('/<(?:div|section)\b[^>]*\bhero-bg\b[^>]*>/i', $lean_qo->post_content, $lean_tag)
-		&& preg_match('/url\(\s*(?:&quot;|&#0?34;|["\']?)\s*([^)"\'\s]+\.(?:webp|avif|jpe?g|png))/i', $lean_tag[0], $lean_m)) {
-		$lean_hero_url = html_entity_decode($lean_m[1]);
+	if ($lean_qo instanceof WP_Post && strpos($lean_qo->post_content, 'hero-bg') !== false) {
+		// (a) CSS-background hero: <div|section class="hero-bg" style="...url()...">
+		if (preg_match('/<(?:div|section)\b[^>]*\bhero-bg\b[^>]*>/i', $lean_qo->post_content, $lean_tag)
+			&& preg_match('/url\(\s*(?:&quot;|&#0?34;|["\']?)\s*([^)"\'\s]+\.(?:webp|avif|jpe?g|png))/i', $lean_tag[0], $lean_m)) {
+			$lean_hero_url = html_entity_decode($lean_m[1]);
+		}
+		// (b) <img class="hero-bg" src="..."> hero (attribute order-independent)
+		elseif (preg_match('/<img\b[^>]*\bhero-bg\b[^>]*>/i', $lean_qo->post_content, $lean_tag)
+			&& preg_match('/\bsrc\s*=\s*["\']([^"\']+\.(?:webp|avif|jpe?g|png))/i', $lean_tag[0], $lean_m)) {
+			$lean_hero_url = html_entity_decode($lean_m[1]);
+		}
 	}
 }
 if ($lean_hero_url): ?>
