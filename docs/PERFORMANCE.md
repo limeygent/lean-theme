@@ -3,7 +3,10 @@
 How to get a Lean Theme page to PSI mobile ~100. Proven on The Roc Foundation Repair:
 blog posts **93 → 100**, home page **87 → 99** (the 99 is lab noise off 100).
 
-Stack assumed: WordPress on Cloudways + **Breeze** (page cache) + **Perfmatters** (asset optimization).
+Stack assumed: WordPress + a **page cache** + **Perfmatters** (asset optimization). The page
+cache is host-dependent — **Breeze** on Cloudways, **SG Optimizer / Dynamic Cache** on
+SiteGround. The rule is the same either way: the page cache does *caching only*; Perfmatters
+owns all frontend optimization (RUCSS, defer/delay JS). See Part 3 for per-host setup.
 
 ---
 
@@ -12,7 +15,7 @@ Stack assumed: WordPress on Cloudways + **Breeze** (page cache) + **Perfmatters*
 1. **Every image is WebP and right-sized.** Convert JP/PNG → WebP, compress, and serve at ~display size (not 900px in a 680px slot). The LCP image matters most.
 2. **The LCP element must be discoverable + high priority.** If the hero is a CSS `background:url()`, it is invisible to the preload scanner — preload it (the theme now does this automatically; see below).
 3. **Fonts: `font-display: optional` + preload.** `optional` gives zero CLS but the webfont must arrive in ~100 ms or it is dropped ("webfont not used"). Preloading makes it land in time.
-4. **Perfmatters: Remove Unused CSS = Inline, Defer + Delay JS.** This is what kills render-blocking. Breeze does caching + minify only.
+4. **Perfmatters: Remove Unused CSS = Inline, Defer + Delay JS.** This is what kills render-blocking. The host page cache (Breeze / SG Optimizer) does caching only.
 5. **Subset icon/glyph fonts** to the glyphs actually used.
 
 ---
@@ -49,21 +52,36 @@ These are baked into the theme; no per-page work needed:
    filenames — no `-1` dedupe suffix.
 6. **Re-test PSI mobile.** Target: LCP < 2.5 s, CLS < 0.1, TBT 0, no render-blocking.
 
-## Part 3 — Per-site plugin setup (Perfmatters + Breeze)
+## Part 3 — Per-site plugin setup (Perfmatters + host page cache)
 
 The theme seeds Perfmatters on activation, but verify:
 
-**Perfmatters**
+**Perfmatters** (host-independent)
 - CSS → Remove Unused CSS: **ON**, Used CSS Method: **Inline** (empty = "Inline (Default)" in current
   versions), Stylesheet Behavior: Delay.
 - JavaScript → Defer: **ON**. Delay: **ON**, "Only Delay Specified Scripts", inclusion: `bootstrap.bundle`
   (keeps the mobile nav working on first tap).
-- Minify: leave OFF (Breeze does it).
+- Minify: leave OFF (the page-cache layer handles it, and doubling up breaks RUCSS).
 
-**Breeze** — caching + minify ONLY. Turn **off** Combine/Defer CSS & JS so it doesn't fight Perfmatters.
+**Page cache — let Perfmatters own frontend optimization; the cache does server caching only.**
+The mistake to avoid on any host is *two* plugins minifying/combining/lazy-loading the same assets —
+they fight and regress the score. Pick your host below:
 
-**After any CSS or font change:** Perfmatters → Clear Used CSS, then purge Breeze.
-**After a content/image change:** purge Breeze.
+- **Cloudways → Breeze:** caching (+ minify) ONLY. Turn **off** Combine/Defer CSS & JS so it doesn't
+  fight Perfmatters.
+- **SiteGround → SG Optimizer (Speed Optimizer):** use it for **caching only** (Dynamic Cache +
+  Memcached + NGINX Direct Delivery). Turn **OFF** its frontend optimizations that overlap Perfmatters:
+  - Frontend → CSS: minify + combine **OFF** (Perfmatters RUCSS owns CSS).
+  - Frontend → JavaScript: minify + combine + defer **OFF** (Perfmatters owns JS).
+  - Media → **Lazy load images OFF** ⚠️ — if SG lazy-loads the hero, it nukes LCP. The theme marks the
+    hero eager/`fetchpriority=high`; a second lazy-loader re-hides it.
+
+**After any CSS or font change:** Perfmatters → Clear Used CSS, then purge the host page cache
+(Breeze: purge all; SiteGround: admin-bar "Purge SG Cache" or SG Optimizer → Caching → Purge).
+**After a content/image change:** purge the host page cache.
+**After switching the WP Address http → https (or any site-URL change):** the full-page cache stores
+*absolute* URLs, so it can keep serving `http://` asset URLs (→ redirects → slow LCP) until flushed.
+Always **Perfmatters → Clear Used CSS + purge the page cache** after a URL scheme change.
 
 ## Part 4 — Tooling
 
@@ -96,10 +114,19 @@ the CSS, you MUST re-subset or that glyph renders blank.
   let the user delete the old media.
 - **PSI score is noisy ±2-3.** Don't chase 99→100. "Unscored" insights (lazy below-fold images, logo
   at its size floor, unattributed forced reflow) won't change the score.
+- **Never PSI-test a URL with a query string** (`?foo`, cache-buster, UTM). A query string bypasses the
+  full-page cache (Breeze / SG Dynamic Cache), so every run is an *uncached* PHP render → inflated LCP
+  that no real visitor sees. Test the **clean** permalink, and warm it once (load in incognito) before
+  testing so PSI hits the cache. A warm SG hit is ~50 ms TTFB; a cache miss is many × that.
+- **A stale cache masks every fix.** If a change (esp. http→https, see Part 3) doesn't show up, you're
+  almost certainly looking at cached HTML. Clear Perfmatters Used CSS + purge the page cache, *then*
+  re-test — before concluding the fix didn't work.
 
 ## Part 6 — Deploy workflow (this theme is uploaded manually)
 
 1. Make theme changes locally, commit + push to `limeygent/lean-theme`.
 2. Upload the changed theme files to the site.
-3. If CSS/fonts changed: Perfmatters → Clear Used CSS. Always purge Breeze.
-4. Re-test PSI mobile (fresh, incognito) — browser font/asset cache can mask changes.
+3. If CSS/fonts changed: Perfmatters → Clear Used CSS. Always purge the host page cache
+   (Breeze: purge all; SiteGround: "Purge SG Cache").
+4. Re-test PSI mobile (fresh, incognito, **clean permalink — no query string**) — browser and
+   server caches both mask changes.
