@@ -13,39 +13,60 @@ get_header();
 <section class="py-5">
 	<div class="container">
 		<?php
-		// Heading: title of the Posts Page, or fall back to "News"
-		$page_for_posts = (int) get_option('page_for_posts');
+		// Heading: title of the Posts Page, or fall back to "News".
+		//
+		// page_for_posts only means anything when a static front page is configured.
+		// WordPress keeps the old value when Reading is switched back to "Your latest
+		// posts" — that is how the dropdown remembers your choice — so reading it
+		// blindly puts a stale heading on the roll, or an empty <h1> if that page has
+		// since been trashed.
+		$page_for_posts = ('page' === get_option('show_on_front')) ? (int) get_option('page_for_posts') : 0;
 		$heading = $page_for_posts ? get_the_title($page_for_posts) : 'News';
+		if ('' === trim((string) $heading)) {
+			$heading = 'News';
+		}
 		?>
 		<h1 class="mb-4"><?php echo esc_html($heading); ?></h1>
 
 		<?php if ( have_posts() ) : ?>
-			<div class="row g-4">
+			<div class="row g-4" id="lean-post-grid">
 				<?php while ( have_posts() ) : the_post(); ?>
-					<article class="col-12 col-md-4 col-lg-3">
-						<a href="<?php the_permalink(); ?>" class="d-block text-decoration-none text-body">
-							<?php if ( has_post_thumbnail() ) : ?>
-								<?php the_post_thumbnail('medium_large', [
-									'class'   => 'img-fluid rounded mb-3 w-100',
-									'loading' => 'lazy',
-								]); ?>
-							<?php else : ?>
-								<div class="bg-light rounded mb-3" style="aspect-ratio: 4/3;"></div>
-							<?php endif; ?>
-
-							<h2 class="h4 fw-bold mb-0"><?php the_title(); ?></h2>
-						</a>
-					</article>
+					<?php lean_get_template_part('template-parts/post-card'); ?>
 				<?php endwhile; ?>
 			</div>
 
-			<div class="mt-5">
-				<?php the_posts_pagination([
-					'mid_size'  => 1,
-					'prev_text' => '&laquo; Previous',
-					'next_text' => 'Next &raquo;',
-				]); ?>
-			</div>
+			<?php
+			global $wp_query;
+			$lean_max   = (int) $wp_query->max_num_pages;
+			$lean_paged = max(1, (int) get_query_var('paged'));
+			?>
+
+			<?php if ( $lean_paged < $lean_max ) : ?>
+				<?php
+				// Infinite scroll. The sentinel auto-loads the next batch as it nears
+				// the viewport, so no /page/2/ link is ever rendered.
+				//
+				// It is a real <button>, not a bare <div>: scroll position is not an
+				// input a keyboard user has, and an unfocusable sentinel would strand
+				// them at post 20. Activating it loads the next batch directly.
+				?>
+				<?php
+				// The live region sits OUTSIDE the sentinel on purpose. The script removes
+				// the sentinel once the last batch lands; a live region destroyed in the
+				// same task never gets announced, so "All posts loaded." would be silent.
+				?>
+				<p class="visually-hidden" role="status" id="lean-load-more-status"></p>
+
+				<div class="text-center mt-5" id="lean-load-more-sentinel">
+					<button type="button"
+					        class="btn btn-primary btn-lg"
+					        id="lean-load-more"
+					        data-ajax-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
+					        data-paged="<?php echo esc_attr($lean_paged); ?>">
+						Load more posts
+					</button>
+				</div>
+			<?php endif; ?>
 		<?php else : ?>
 			<p>No posts yet.</p>
 		<?php endif; ?>

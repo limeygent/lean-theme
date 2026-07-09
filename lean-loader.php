@@ -65,6 +65,9 @@ require_once LEAN_THEME_DIR . '/inc/performance.php';
 // Performance: auto-import tuned Perfmatters settings on theme activation
 require_once LEAN_THEME_DIR . '/inc/perfmatters-defaults.php';
 
+// Blog roll: batch size, "Load more" endpoint, and its script (used by home.php)
+require_once LEAN_THEME_DIR . '/inc/blog-roll.php';
+
 // ──────────────────────────────────────────────────────────────────────────────
 // SHORTCODES
 // ──────────────────────────────────────────────────────────────────────────────
@@ -107,7 +110,11 @@ function lean_fallback_head_seo() {
 		}
 	}
 
-	echo '<meta name="robots" content="' . (get_option('blog_public') ? 'index, follow' : 'noindex, nofollow') . '">' . "\n";
+	// The paginated blog roll prints its own noindex (inc/blog-roll.php) on a later
+	// priority; skip here so those URLs never carry two robots tags.
+	if (!lean_blog_roll_is_noindex()) {
+		echo '<meta name="robots" content="' . (get_option('blog_public') ? 'index, follow' : 'noindex, nofollow') . '">' . "\n";
+	}
 }
 
 /**
@@ -166,6 +173,54 @@ function lean_get_page_language() {
 		}
 	}
 	return get_option('lean_default_language', 'en-US');
+}
+
+/**
+ * The summary shown beneath a post's featured image in listing grids.
+ *
+ * Prefers the NerdPress SEO meta description, so a card and its search snippet
+ * say the same thing. Asks the plugin for its own key rather than hardcoding
+ * one: the prefix is operator-configurable (NerdPress SEO → Settings → Meta
+ * field prefix), and sites migrated off the retired inc/seo.php still store
+ * descriptions under `_lean_meta_description`.
+ *
+ * Keep the function_exists() guard. This runs once per card, and a deactivated
+ * plugin would otherwise fatal the entire blog roll — the same failure mode as
+ * the lean_get_page_language() regression above.
+ *
+ * Returns raw text; escape at the point of output.
+ */
+function lean_post_summary($post_id = null, $words = 25) {
+	$post_id = $post_id ? (int) $post_id : get_the_ID();
+	if (!$post_id) {
+		return '';
+	}
+
+	if (function_exists('nerdpress_meta_key')) {
+		$description = get_post_meta($post_id, nerdpress_meta_key('description'), true);
+		if (!empty($description)) {
+			return $description;
+		}
+	}
+
+	// A password-protected post is still `publish`, so it appears in listings. Stop
+	// before the excerpt and content fallbacks: get_post_field() reads the gated
+	// body straight out of the DB with none of the protection that core's
+	// get_the_content()/get_the_excerpt() apply, which would publish the first
+	// $words of it to anyone. An author-written meta description is fine — it is
+	// already public in the <head> — so it is resolved above this line.
+	if (post_password_required($post_id)) {
+		return '';
+	}
+
+	// Manual excerpts may legitimately contain markup. The card escapes with
+	// esc_html(), so leaving tags in would render them as visible tag soup.
+	if (has_excerpt($post_id)) {
+		return wp_strip_all_tags(get_the_excerpt($post_id));
+	}
+
+	$content = strip_shortcodes(get_post_field('post_content', $post_id));
+	return wp_trim_words(wp_strip_all_tags($content), $words, '…');
 }
 
 /**
