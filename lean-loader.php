@@ -176,6 +176,31 @@ function lean_get_page_language() {
 }
 
 /**
+ * Collapse whitespace and cut to at most $chars characters on a word boundary.
+ *
+ * 160 is the meta-description budget, so a well-formed description passes through
+ * untouched and the card shows it in full. Only the excerpt/content fallbacks are
+ * long enough to actually get cut.
+ *
+ * Uses mb_substr/mb_strlen (WordPress shims both). strrpos on a space is safe on
+ * UTF-8 because 0x20 never occurs inside a multi-byte sequence.
+ */
+function lean_trim_chars($text, $chars = 160, $more = '…') {
+	$text = trim(preg_replace('/\s+/u', ' ', (string) $text));
+	if ('' === $text || mb_strlen($text) <= $chars) {
+		return $text;
+	}
+
+	$cut = mb_substr($text, 0, $chars);
+	$space = strrpos($cut, ' ');
+	if (false !== $space && $space > 0) {
+		$cut = substr($cut, 0, $space);
+	}
+
+	return rtrim($cut, " \t\n\r\0\x0B.,;:–—-") . $more;
+}
+
+/**
  * The summary shown beneath a post's featured image in listing grids.
  *
  * Prefers the NerdPress SEO meta description, so a card and its search snippet
@@ -190,7 +215,7 @@ function lean_get_page_language() {
  *
  * Returns raw text; escape at the point of output.
  */
-function lean_post_summary($post_id = null, $words = 25) {
+function lean_post_summary($post_id = null, $chars = 160) {
 	$post_id = $post_id ? (int) $post_id : get_the_ID();
 	if (!$post_id) {
 		return '';
@@ -199,7 +224,8 @@ function lean_post_summary($post_id = null, $words = 25) {
 	if (function_exists('nerdpress_meta_key')) {
 		$description = get_post_meta($post_id, nerdpress_meta_key('description'), true);
 		if (!empty($description)) {
-			return $description;
+			// A description written to the 160-char budget is returned whole.
+			return lean_trim_chars($description, $chars);
 		}
 	}
 
@@ -216,11 +242,34 @@ function lean_post_summary($post_id = null, $words = 25) {
 	// Manual excerpts may legitimately contain markup. The card escapes with
 	// esc_html(), so leaving tags in would render them as visible tag soup.
 	if (has_excerpt($post_id)) {
-		return wp_strip_all_tags(get_the_excerpt($post_id));
+		return lean_trim_chars(wp_strip_all_tags(get_the_excerpt($post_id)), $chars);
 	}
 
 	$content = strip_shortcodes(get_post_field('post_content', $post_id));
-	return wp_trim_words(wp_strip_all_tags($content), $words, '…');
+
+	// Headings make poor summary prose, and most posts open with their own title as
+	// an <h1>/<h2>, which would render the card as "Title Title Body…". Drop heading
+	// elements outright before flattening the rest.
+	$stripped = preg_replace('#<h[1-6]\b[^>]*>.*?</h[1-6]>#is', ' ', $content);
+	if (null !== $stripped) {
+		$content = $stripped;
+	}
+
+	$text = trim(preg_replace('/\s+/u', ' ', wp_strip_all_tags($content)));
+
+	// Belt and braces: catch a title repeated as plain text rather than as a heading.
+	// The boundary check matters — without it the title "Furnace Repair" would eat
+	// the first words of a body reading "Furnace repairs are seasonal work."
+	$title = trim(preg_replace('/\s+/u', ' ', wp_strip_all_tags(get_the_title($post_id))));
+	if ('' !== $title) {
+		$pattern = '/^' . preg_quote($title, '/') . '(?![\p{L}\p{N}])[\s\p{P}]*/iu';
+		$trimmed = preg_replace($pattern, '', $text, 1);
+		if (null !== $trimmed) {
+			$text = $trimmed;
+		}
+	}
+
+	return lean_trim_chars($text, $chars);
 }
 
 /**
