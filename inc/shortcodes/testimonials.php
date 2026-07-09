@@ -3,6 +3,16 @@
 /**
  * Testimonials Shortcode
  * Usage: [testimonials num_reviews="6"]
+ *        [testimonials category="hvac"]                       (single term slug)
+ *        [testimonials category="hvac,plumbing"]              (any of several)
+ *        [testimonials category="maintenance" num_reviews="6"] (tops up from "generic")
+ *        [testimonials category="maintenance" fallback="reviews"] (custom top-up)
+ *        [testimonials category="maintenance" fallback=""]    (no top-up, show what exists)
+ *
+ * Filters by the `testimonial_category` taxonomy when `category` is given, newest
+ * first. If the primary category has fewer than num_reviews, the remaining slots
+ * are filled at random from the `fallback` category (default "generic"), with no
+ * duplicates. Set fallback="" to disable top-up.
  * WCAG AA Compliant testimonials display
  */
 
@@ -12,22 +22,83 @@ add_shortcode('testimonials', 'display_testimonials_shortcode');
 function display_testimonials_shortcode($atts) {
     // Parse shortcode attributes
     $atts = shortcode_atts(array(
-        'num_reviews' => 4, // Number of reviews to show
+        'num_reviews' => 4,         // Number of reviews to show
+        'category'    => '',        // Primary testimonial_category slug(s), comma-separated
+        'fallback'    => 'generic', // Top-up category when the primary is short; '' disables
     ), $atts, 'testimonials');
-    
+
     // Sanitize the number of reviews
     $num_reviews = absint($atts['num_reviews']);
     if ($num_reviews < 1) {
         $num_reviews = 6;
     }
-    
-    // Query testimonials
+
+    $primary_slugs  = array_filter(array_map('sanitize_title', explode(',', $atts['category'])));
+    $fallback_slugs = array_filter(array_map('sanitize_title', explode(',', $atts['fallback'])));
+    // A fallback that duplicates the primary would just re-return the same posts.
+    $fallback_slugs = array_diff($fallback_slugs, $primary_slugs);
+
+    // Collect the post IDs to render, in display order.
+    if (empty($primary_slugs)) {
+        // No category filter — newest N across all testimonials (original behavior).
+        $ids_query = new WP_Query(array(
+            'post_type'      => 'testimonials',
+            'post_status'    => 'publish',
+            'posts_per_page' => $num_reviews,
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+            'fields'         => 'ids',
+        ));
+        $collected_ids = $ids_query->posts;
+    } else {
+        // 1. Primary category, newest first.
+        $primary_query = new WP_Query(array(
+            'post_type'      => 'testimonials',
+            'post_status'    => 'publish',
+            'posts_per_page' => $num_reviews,
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+            'fields'         => 'ids',
+            'tax_query'      => array(array(
+                'taxonomy' => 'testimonial_category',
+                'field'    => 'slug',
+                'terms'    => $primary_slugs,
+            )),
+        ));
+        $collected_ids = $primary_query->posts;
+
+        // 2. If short, top up the remainder randomly from the fallback category,
+        //    excluding anything already collected so nothing repeats.
+        $needed = $num_reviews - count($collected_ids);
+        if ($needed > 0 && !empty($fallback_slugs)) {
+            $fallback_query = new WP_Query(array(
+                'post_type'      => 'testimonials',
+                'post_status'    => 'publish',
+                'posts_per_page' => $needed,
+                'orderby'        => 'rand',
+                'fields'         => 'ids',
+                'post__not_in'   => $collected_ids,
+                'tax_query'      => array(array(
+                    'taxonomy' => 'testimonial_category',
+                    'field'    => 'slug',
+                    'terms'    => $fallback_slugs,
+                )),
+            ));
+            $collected_ids = array_merge($collected_ids, $fallback_query->posts);
+        }
+    }
+
+    if (empty($collected_ids)) {
+        return '<p>No testimonials found.</p>';
+    }
+
+    // Render query: fetch the collected posts, preserving the order above.
     $testimonials_query = new WP_Query(array(
-        'post_type' => 'testimonials',
-        'post_status' => 'publish',
-        'posts_per_page' => $num_reviews,
-        'orderby' => 'date',
-        'order' => 'DESC'
+        'post_type'      => 'testimonials',
+        'post_status'    => 'publish',
+        'post__in'       => $collected_ids,
+        'orderby'        => 'post__in',
+        'posts_per_page' => count($collected_ids),
     ));
     
     if (!$testimonials_query->have_posts()) {
@@ -132,6 +203,6 @@ echo '<div class="items-grid" role="region" aria-label="Customer testimonials">'
 add_action('admin_footer', function() {
     $screen = get_current_screen();
     if ($screen && $screen->post_type === 'testimonials') {
-        echo '<div class="notice notice-info"><p><strong>Testimonials Shortcode:</strong> Use <code>[testimonials num_reviews="6"]</code> to display testimonials.</p></div>';
+        echo '<div class="notice notice-info"><p><strong>Testimonials Shortcode:</strong> Use <code>[testimonials num_reviews="6"]</code> to display testimonials, or <code>[testimonials category="slug"]</code> to show only one category.</p></div>';
     }
 });

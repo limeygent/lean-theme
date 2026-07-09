@@ -598,7 +598,10 @@ function lean_theme_shortcodes_reference() {
 				<thead><tr><th>Shortcode</th><th>Description</th></tr></thead>
 				<tbody>
 					<tr><td><code>[lean_form]</code></td><td>Contact form</td></tr>
-					<tr><td><code>[testimonials num_reviews="6"]</code></td><td>Display testimonials</td></tr>
+					<tr><td><code>[testimonials num_reviews="6"]</code></td><td>Display the newest testimonials (all categories)</td></tr>
+					<tr><td><code>[testimonials category="maintenance"]</code></td><td>Only the <em>maintenance</em> testimonial category (slug); comma-separate for several, e.g. <code>category="hvac,plumbing"</code></td></tr>
+					<tr><td><code>[testimonials category="maintenance" num_reviews="6"]</code></td><td>If the category has fewer than <code>num_reviews</code>, top up the rest at random from the <em>generic</em> category</td></tr>
+					<tr><td><code>[testimonials category="maintenance" fallback="reviews"]</code></td><td>Use a custom top-up category instead of <em>generic</em>; <code>fallback=""</code> disables top-up</td></tr>
 					<tr><td><code>[latest_blog_post]</code></td><td>Link to latest post</td></tr>
 				</tbody>
 			</table>
