@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Blocks a push that ships code without a version bump.
+# Enable once per clone:  git config core.hooksPath .githooks
+# Bypass deliberately:    git push --no-verify
+exec "$(git rev-parse --show-toplevel)/bin/check-version.sh"
