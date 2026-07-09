@@ -1,15 +1,16 @@
 /*!
  * Bootstrap Icons v1.11.3 — curated subset for lean-theme landing pages
- * 80 icons vs full library (~86KB CSS); full font (woff2/woff) is loaded,
- * so adding a glyph here only needs its content mapping (no font change).
- * Font files: /fonts/bootstrap-icons.woff2 + .woff
+ * 149 icons (font + css both subset to this list). To add an icon:
+ * add its name to build-icons.py's list and re-run — editing this css alone
+ * will NOT render it (the woff2/woff are subset to these glyphs too).
+ * Font files: /assets/fonts/bootstrap-icons/bootstrap-icons.woff2 + .woff
  */
 
 @font-face {
   font-display: swap;
   font-family: "bootstrap-icons";
-  src: url("../assets/fonts/bootstrap-icons/bootstrap-icons.woff2") format("woff2"),
-       url("../assets/fonts/bootstrap-icons/bootstrap-icons.woff") format("woff");}
+  src: url("../assets/fonts/bootstrap-icons/bootstrap-icons.woff2?v=d6d44556") format("woff2"),
+       url("../assets/fonts/bootstrap-icons/bootstrap-icons.woff?v=d6d44556") format("woff");}
 
 .bi::before,
 [class^="bi-"]::before,
@@ -26,85 +27,152 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* base 66 icons — alphabetical (landing-page additions appended at end) */
+.bi-activity::before { content: "\f66b"; }
+.bi-arrow-clockwise::before { content: "\f116"; }
+.bi-arrow-counterclockwise::before { content: "\f117"; }
+.bi-arrow-down-up::before { content: "\f127"; }
 .bi-arrow-repeat::before { content: "\f130"; }
 .bi-arrow-right::before { content: "\f138"; }
 .bi-award-fill::before { content: "\f153"; }
+.bi-bar-chart-fill::before { content: "\f17a"; }
+.bi-battery-charging::before { content: "\f185"; }
+.bi-border-width::before { content: "\f1b3"; }
 .bi-box-arrow-up-right::before { content: "\f1c5"; }
 .bi-box-seam::before { content: "\f1c7"; }
+.bi-boxes::before { content: "\f685"; }
+.bi-bricks::before { content: "\f1ca"; }
+.bi-brightness-high::before { content: "\f1d2"; }
+.bi-bug::before { content: "\f1dc"; }
 .bi-building::before { content: "\f1dd"; }
+.bi-building-fill::before { content: "\f876"; }
+.bi-buildings::before { content: "\f87d"; }
 .bi-calculator::before { content: "\f1e0"; }
 .bi-calendar-check::before { content: "\f1e2"; }
 .bi-calendar3::before { content: "\f214"; }
 .bi-capsule::before { content: "\f7df"; }
 .bi-cash-stack::before { content: "\f246"; }
+.bi-chat-dots::before { content: "\f24a"; }
+.bi-chat-left-text::before { content: "\f252"; }
+.bi-check-circle::before { content: "\f26b"; }
 .bi-check-circle-fill::before { content: "\f26a"; }
 .bi-check2::before { content: "\f272"; }
+.bi-check2-circle::before { content: "\f270"; }
+.bi-clipboard-check::before { content: "\f28b"; }
+.bi-clipboard-check-fill::before { content: "\f71b"; }
 .bi-clock::before { content: "\f293"; }
 .bi-clock-fill::before { content: "\f291"; }
 .bi-clock-history::before { content: "\f292"; }
+.bi-cloud-sun::before { content: "\f2be"; }
+.bi-cone-striped::before { content: "\f2d2"; }
+.bi-currency-dollar::before { content: "\f636"; }
 .bi-dash-circle::before { content: "\f2e6"; }
+.bi-diagram-3::before { content: "\f2ee"; }
+.bi-diagram-3-fill::before { content: "\f2ed"; }
+.bi-door-closed-fill::before { content: "\f305"; }
 .bi-droplet::before { content: "\f30d"; }
 .bi-droplet-fill::before { content: "\f30b"; }
+.bi-droplet-half::before { content: "\f30c"; }
 .bi-envelope::before { content: "\f32f"; }
 .bi-exclamation-circle::before { content: "\f333"; }
+.bi-exclamation-octagon::before { content: "\f337"; }
+.bi-exclamation-octagon-fill::before { content: "\f336"; }
 .bi-exclamation-triangle::before { content: "\f33b"; }
+.bi-exclamation-triangle-fill::before { content: "\f33a"; }
 .bi-facebook::before { content: "\f344"; }
-.bi-file-earmark-check::before { content: "\f35f"; }
+.bi-fan::before { content: "\f670"; }
+.bi-file-earmark-check::before { content: "\f360"; }
 .bi-fire::before { content: "\f7f6"; }
+.bi-funnel::before { content: "\f3e1"; }
+.bi-funnel-fill::before { content: "\f3e0"; }
+.bi-gear::before { content: "\f3e5"; }
+.bi-gear-fill::before { content: "\f3e2"; }
+.bi-gear-wide-connected::before { content: "\f3e3"; }
 .bi-geo-alt::before { content: "\f3e8"; }
 .bi-geo-alt-fill::before { content: "\f3e7"; }
+.bi-globe-americas::before { content: "\f882"; }
 .bi-google::before { content: "\f3f0"; }
 .bi-graph-up-arrow::before { content: "\f673"; }
+.bi-grid-3x3-gap-fill::before { content: "\f3f8"; }
+.bi-hammer::before { content: "\f3ff"; }
+.bi-hand-thumbs-up::before { content: "\f407"; }
 .bi-heart-pulse::before { content: "\f76f"; }
 .bi-hospital::before { content: "\f774"; }
+.bi-hourglass-split::before { content: "\f41f"; }
+.bi-house::before { content: "\f425"; }
+.bi-house-check::before { content: "\f889"; }
 .bi-house-door::before { content: "\f423"; }
+.bi-house-gear::before { content: "\f891"; }
 .bi-house-heart::before { content: "\f776"; }
 .bi-house-heart-fill::before { content: "\f775"; }
+.bi-hurricane::before { content: "\f427"; }
 .bi-image::before { content: "\f42a"; }
 .bi-images::before { content: "\f42b"; }
 .bi-info-circle::before { content: "\f431"; }
 .bi-instagram::before { content: "\f437"; }
+.bi-journal-check::before { content: "\f43e"; }
+.bi-lamp::before { content: "\f454"; }
+.bi-lightbulb::before { content: "\f46b"; }
+.bi-lightning::before { content: "\f46f"; }
 .bi-lightning-charge::before { content: "\f46d"; }
+.bi-lightning-charge-fill::before { content: "\f46c"; }
 .bi-lightning-fill::before { content: "\f46e"; }
+.bi-list-check::before { content: "\f473"; }
 .bi-map::before { content: "\f47f"; }
 .bi-moisture::before { content: "\f493"; }
 .bi-mortarboard::before { content: "\f6fe"; }
+.bi-mortarboard-fill::before { content: "\f6fd"; }
 .bi-patch-check::before { content: "\f4b6"; }
 .bi-patch-check-fill::before { content: "\f4b5"; }
 .bi-people::before { content: "\f4d0"; }
 .bi-people-fill::before { content: "\f4cf"; }
+.bi-person-check::before { content: "\f4d6"; }
+.bi-piggy-bank::before { content: "\f64a"; }
+.bi-pin-map::before { content: "\f64c"; }
+.bi-plug::before { content: "\f4f7"; }
+.bi-plug-fill::before { content: "\f4f6"; }
+.bi-power::before { content: "\f4ff"; }
+.bi-question-circle::before { content: "\f505"; }
 .bi-receipt-cutoff::before { content: "\f50e"; }
+.bi-recycle::before { content: "\f64f"; }
+.bi-rulers::before { content: "\f523"; }
+.bi-screwdriver::before { content: "\f529"; }
 .bi-search::before { content: "\f52a"; }
+.bi-shield::before { content: "\f53f"; }
 .bi-shield-check::before { content: "\f52f"; }
 .bi-shield-fill-check::before { content: "\f531"; }
+.bi-signpost-split::before { content: "\f549"; }
+.bi-sliders::before { content: "\f56b"; }
+.bi-snow::before { content: "\f56d"; }
 .bi-snow2::before { content: "\f56e"; }
+.bi-snow3::before { content: "\f56f"; }
+.bi-speedometer2::before { content: "\f580"; }
 .bi-star-fill::before { content: "\f586"; }
+.bi-stopwatch::before { content: "\f597"; }
+.bi-sun::before { content: "\f5a2"; }
+.bi-table::before { content: "\f5aa"; }
+.bi-tag::before { content: "\f5b0"; }
 .bi-telephone::before { content: "\f5c1"; }
 .bi-telephone-fill::before { content: "\f5b4"; }
+.bi-telephone-outbound::before { content: "\f5bc"; }
+.bi-thermometer::before { content: "\f5d2"; }
+.bi-thermometer-half::before { content: "\f5cd"; }
+.bi-thermometer-high::before { content: "\f5ce"; }
+.bi-thermometer-low::before { content: "\f5cf"; }
+.bi-thermometer-snow::before { content: "\f5d0"; }
+.bi-thermometer-sun::before { content: "\f5d1"; }
+.bi-toggle-on::before { content: "\f5d6"; }
 .bi-tools::before { content: "\f5db"; }
 .bi-tornado::before { content: "\f5dc"; }
 .bi-translate::before { content: "\f658"; }
 .bi-tree::before { content: "\f5e2"; }
 .bi-trophy::before { content: "\f5e7"; }
+.bi-trophy-fill::before { content: "\f5e6"; }
+.bi-twitter-x::before { content: "\f8db"; }
 .bi-virus::before { content: "\f827"; }
+.bi-wallet2::before { content: "\f615"; }
 .bi-water::before { content: "\f617"; }
+.bi-wind::before { content: "\f61d"; }
 .bi-wrench::before { content: "\f621"; }
+.bi-wrench-adjustable::before { content: "\f790"; }
 .bi-x-circle::before { content: "\f623"; }
 .bi-yelp::before { content: "\f82a"; }
-.bi-twitter-x::before { content: "\f8db"; }
-/* added for landing-page components (full font already loaded) */
-.bi-arrow-down-up::before { content: "\f127"; }
-.bi-bar-chart-fill::before { content: "\f17a"; }
-.bi-border-width::before { content: "\f1b3"; }
-.bi-bricks::before { content: "\f1ca"; }
-.bi-building-fill::before { content: "\f876"; }
-.bi-clipboard-check-fill::before { content: "\f71b"; }
-.bi-diagram-3-fill::before { content: "\f2ed"; }
-.bi-door-closed-fill::before { content: "\f305"; }
-.bi-globe-americas::before { content: "\f882"; }
-.bi-grid-3x3-gap-fill::before { content: "\f3f8"; }
-.bi-hammer::before { content: "\f3ff"; }
-.bi-mortarboard-fill::before { content: "\f6fd"; }
-.bi-rulers::before { content: "\f523"; }
-.bi-trophy-fill::before { content: "\f5e6"; }
