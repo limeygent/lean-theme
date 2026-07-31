@@ -22,7 +22,7 @@ A lightweight WordPress theme/module with built-in SEO functionality, Bootstrap 
 ## Project Structure
 - `lean-loader.php` - Main entry point for all functionality
 - `functions.php` - Standalone theme bootstrap (just includes loader)
-- `/inc/` - PHP includes (SEO, settings, shortcodes, forms)
+- `/inc/` - PHP includes (SEO, settings, shortcodes, forms, lead attribution)
 - `/css/` - Stylesheets (Bootstrap, custom styles)
 - `/template-parts/` - Theme template partials
 - `/code-snippets/` - Standalone code snippets for SEO functionality

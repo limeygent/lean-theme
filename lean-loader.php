@@ -44,6 +44,9 @@ function lean_require_nerdpress_notice() {
 // Declarative WebMCP helpers (must load before forms.php — the form renderer calls these)
 require_once LEAN_THEME_DIR . '/inc/lean-webmcp.php';
 
+// Campaign attribution (utm_source/medium cookie — must load before forms.php, which stores it)
+require_once LEAN_THEME_DIR . '/inc/attribution.php';
+
 // Contact form system (shortcode, handler, admin viewer)
 require_once LEAN_THEME_DIR . '/inc/forms.php';
 

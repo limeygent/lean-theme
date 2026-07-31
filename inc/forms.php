@@ -17,6 +17,18 @@
 // DATABASE TABLE SETUP
 // ──────────────────────────────────────────────────────────────────────────────
 
+// Campaign attribution helpers (lean_attribution_from_post / _label). lean-loader.php loads
+// these ahead of us; the require keeps forms.php self-sufficient when it's dropped into
+// another theme on its own, as the header above advertises.
+require_once __DIR__ . '/attribution.php';
+
+// Schema version. Bump whenever the table definition changes, and teach
+// lean_forms_upgrade_schema() how to get an existing table from the old shape to the new one.
+// 1.0 initial schema | 1.1 utm_source + utm_medium
+if (!defined('LEAN_FORMS_DB_VERSION')) {
+	define('LEAN_FORMS_DB_VERSION', '1.1');
+}
+
 /**
  * Get the submissions table name
  */
@@ -45,6 +57,8 @@ function lean_forms_create_table() {
 		page_title varchar(255) DEFAULT '',
 		page_url varchar(255) DEFAULT '',
 		referrer varchar(255) DEFAULT '',
+		utm_source varchar(100) NOT NULL DEFAULT '',
+		utm_medium varchar(100) NOT NULL DEFAULT '',
 		ip_address varchar(45) DEFAULT '',
 		user_agent text DEFAULT '',
 		status varchar(20) NOT NULL DEFAULT 'new',
@@ -59,23 +73,59 @@ function lean_forms_create_table() {
 		KEY status (status),
 		KEY is_spam (is_spam),
 		KEY created_at (created_at),
-		KEY email (email)
+		KEY email (email),
+		KEY utm_source (utm_source)
 	) {$charset_collate};";
 
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 	dbDelta($sql);
 
 	// Store version for future migrations
-	update_option('lean_forms_db_version', '1.0');
+	update_option('lean_forms_db_version', LEAN_FORMS_DB_VERSION);
 }
 
 /**
- * Check and create table if needed
+ * Bring an existing table up to the current schema.
+ *
+ * Deliberately a targeted ALTER rather than a second dbDelta() pass: the legacy columns are
+ * `text DEFAULT ''`, which MySQL rejects, so dbDelta would try (and silently fail) to rewrite
+ * them on every run. Adding only what's missing keeps the upgrade a single clean statement.
+ *
+ * @return void
+ */
+function lean_forms_upgrade_schema() {
+	global $wpdb;
+	$table = lean_forms_table_name();
+
+	$columns = $wpdb->get_col("SHOW COLUMNS FROM {$table}");
+	if (empty($columns)) {
+		return;
+	}
+
+	// 1.0 → 1.1: campaign attribution
+	if (!in_array('utm_source', $columns, true)) {
+		$wpdb->query("ALTER TABLE {$table}
+			ADD COLUMN utm_source varchar(100) NOT NULL DEFAULT '' AFTER referrer,
+			ADD COLUMN utm_medium varchar(100) NOT NULL DEFAULT '' AFTER utm_source,
+			ADD KEY utm_source (utm_source)");
+	}
+}
+
+/**
+ * Check and create/upgrade table if needed
  */
 function lean_forms_maybe_create_table() {
 	$installed_version = get_option('lean_forms_db_version', '0');
+
+	if (version_compare($installed_version, LEAN_FORMS_DB_VERSION, '>=')) {
+		return;
+	}
+
 	if (version_compare($installed_version, '1.0', '<')) {
-		lean_forms_create_table();
+		lean_forms_create_table(); // Fresh install — CREATE TABLE is already current.
+	} else {
+		lean_forms_upgrade_schema();
+		update_option('lean_forms_db_version', LEAN_FORMS_DB_VERSION);
 	}
 }
 add_action('after_setup_theme', 'lean_forms_maybe_create_table');
@@ -167,6 +217,12 @@ function lean_forms_process_submission() {
 		wp_send_json_error('Please enter a valid email address.');
 	}
 
+	// Campaign attribution + visit path, stamped on the landing page by inc/attribution.php
+	// and posted back by the form's submit handler. source/medium get their own columns
+	// (they're listed and searched); the rest ride along in the meta JSON.
+	$attribution = lean_attribution_from_post();
+	$visit_path  = lean_attribution_path_from_post();
+
 	// Save to database - page_slug is the unique identifier
 	$submission_id = lean_forms_save_submission(array(
 		'name'       => $name,
@@ -178,8 +234,18 @@ function lean_forms_process_submission() {
 		'page_title' => $page_title ?: $page_slug,
 		'page_url'   => wp_get_referer() ?: '',
 		'referrer'   => $_SERVER['HTTP_REFERER'] ?? '',
+		'utm_source' => $attribution['source'],
+		'utm_medium' => $attribution['medium'],
 		'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
 		'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+		'meta'       => array_filter(array(
+			'utm_campaign' => $attribution['campaign'],
+			'utm_term'     => $attribution['term'],
+			'utm_content'  => $attribution['content'],
+			'click_id'     => $attribution['click_id'],
+			'landing_page' => $attribution['landing_page'],
+			'visit_path'   => $visit_path,
+		)),
 	));
 
 	if (!$submission_id) {
@@ -220,14 +286,16 @@ function lean_forms_save_submission($data) {
 		'page_title' => $data['page_title'] ?? '',
 		'page_url'   => $data['page_url'] ?? '',
 		'referrer'   => $data['referrer'] ?? '',
+		'utm_source' => $data['utm_source'] ?? '',
+		'utm_medium' => $data['utm_medium'] ?? '',
 		'ip_address' => $data['ip_address'] ?? '',
 		'user_agent' => $data['user_agent'] ?? '',
 		'status'     => 'new',
 		'is_spam'    => 0,
 		'is_read'    => 0,
-		'meta'       => isset($data['meta']) ? json_encode($data['meta']) : '',
+		'meta'       => !empty($data['meta']) ? json_encode($data['meta']) : '',
 		'created_at' => current_time('mysql'),
-	), array('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%d','%d','%s','%s'));
+	), array('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%d','%d','%s','%s'));
 
 	if ($result === false) {
 		error_log('Lean Forms DB Error: ' . $wpdb->last_error);
@@ -235,6 +303,23 @@ function lean_forms_save_submission($data) {
 	}
 
 	return $wpdb->insert_id;
+}
+
+/**
+ * Read one value out of a submission's meta JSON blob.
+ *
+ * @param object $submission Row from the submissions table.
+ * @param string $key        Meta key, e.g. 'utm_campaign' (string) or 'visit_path' (array).
+ * @param mixed  $default    Returned when the row predates the key or the blob is unreadable.
+ * @return mixed
+ */
+function lean_forms_meta_value($submission, $key, $default = '') {
+	if (empty($submission->meta)) {
+		return $default;
+	}
+
+	$meta = json_decode($submission->meta, true);
+	return is_array($meta) && isset($meta[$key]) ? $meta[$key] : $default;
 }
 
 /**
@@ -265,7 +350,32 @@ function lean_forms_send_notification($submission_id, $config) {
 	$body .= "\nMessage:\n{$submission->message}\n";
 	$body .= "\n---\n";
 	$body .= "Page: {$submission->page_title}\n";
-	$body .= "Submitted: {$submission->created_at}\n";
+
+	// Where the lead came from. Only printed when we actually captured it — leads submitted
+	// before this shipped (or with JS-blocked cookies) shouldn't show an empty "Source:" line.
+	if (!empty($submission->utm_source) || !empty($submission->utm_medium)) {
+		$body .= 'Source: ' . lean_attribution_label($submission->utm_source, $submission->utm_medium) . "\n";
+
+		$campaign = lean_forms_meta_value($submission, 'utm_campaign');
+		if ($campaign !== '') {
+			$body .= "Campaign: {$campaign}\n";
+		}
+
+		$landing = lean_forms_meta_value($submission, 'landing_page');
+		if ($landing !== '') {
+			$body .= "Landed on: {$landing}\n";
+		}
+	}
+
+	// The route they took to the form — often the most useful line in the whole email.
+	$visit_path = lean_forms_meta_value($submission, 'visit_path', array());
+	$path_lines = lean_attribution_format_path($visit_path);
+	if ($path_lines !== '') {
+		$body .= "\nVisit path (" . lean_attribution_path_summary($visit_path) . "):\n";
+		$body .= $path_lines . "\n";
+	}
+
+	$body .= "\nSubmitted: {$submission->created_at}\n";
 	$body .= "IP: {$submission->ip_address}\n";
 	$body .= "\nView in admin: " . admin_url('admin.php?page=lean-form-submissions&view=' . $submission_id);
 
@@ -495,6 +605,23 @@ function lean_forms_shortcode($atts = array()) {
 			var hp = form.querySelector('[name="website"], [data-hp="website"]');
 			data.append('website', hp ? hp.value : '');
 
+			// Campaign attribution + visit path, stamped on the landing page by
+			// inc/attribution.php. The query string is long gone by the time a visitor
+			// reaches the form, so this is the only place these values can come from.
+			var attr = (typeof window.leanAttribution === 'function') ? window.leanAttribution() : null;
+			if (attr) {
+				data.append('utm_source', attr.s || '');
+				data.append('utm_medium', attr.m || '');
+				data.append('utm_campaign', attr.c || '');
+				data.append('utm_term', attr.t || '');
+				data.append('utm_content', attr.n || '');
+				data.append('click_id', attr.k || '');
+				data.append('landing_page', attr.l || '');
+			}
+
+			var path = (typeof window.leanVisitPath === 'function') ? window.leanVisitPath() : null;
+			if (path && path.length) data.append('visit_path', JSON.stringify(path));
+
 			var phone = form.querySelector('[name="phone"]');
 			if (phone) data.append('phone', phone.value);
 
@@ -703,7 +830,7 @@ function lean_forms_admin_page() {
 
 	if (!empty($search)) {
 		$like = '%' . $wpdb->esc_like($search) . '%';
-		$where .= $wpdb->prepare(" AND (name LIKE %s OR email LIKE %s OR message LIKE %s OR phone LIKE %s)", $like, $like, $like, $like);
+		$where .= $wpdb->prepare(" AND (name LIKE %s OR email LIKE %s OR message LIKE %s OR phone LIKE %s OR utm_source LIKE %s)", $like, $like, $like, $like, $like);
 	}
 
 	$total = $wpdb->get_var("SELECT COUNT(*) FROM {$table} {$where}");
@@ -797,12 +924,13 @@ function lean_forms_admin_page() {
 					<th>Email</th>
 					<th>Phone</th>
 					<th>Page</th>
+					<th style="width:150px;">Source</th>
 					<th style="width:180px;">Actions</th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php if (empty($submissions)): ?>
-				<tr><td colspan="6" style="text-align:center;padding:40px;">No submissions found.</td></tr>
+				<tr><td colspan="7" style="text-align:center;padding:40px;">No submissions found.</td></tr>
 				<?php else: ?>
 				<?php foreach ($submissions as $sub): ?>
 				<tr id="row-<?php echo $sub->id; ?>" <?php echo $sub->is_spam ? 'style="background:#fee;"' : ''; ?> <?php echo !$sub->is_read ? 'style="font-weight:bold;"' : ''; ?>>
@@ -811,6 +939,7 @@ function lean_forms_admin_page() {
 					<td><a href="mailto:<?php echo esc_attr($sub->email); ?>"><?php echo esc_html($sub->email); ?></a></td>
 					<td><?php echo esc_html($sub->phone ?: '-'); ?></td>
 					<td><?php echo esc_html($sub->page_title ?: '-'); ?></td>
+					<td><?php echo esc_html(lean_attribution_label($sub->utm_source ?? '', $sub->utm_medium ?? '')); ?></td>
 					<td>
 						<a href="#" class="button button-small" onclick="event.preventDefault();toggleDetail(<?php echo $sub->id; ?>);">View</a>
 						<?php if ($sub->is_spam): ?>
@@ -822,13 +951,49 @@ function lean_forms_admin_page() {
 					</td>
 				</tr>
 				<tr id="detail-<?php echo $sub->id; ?>" style="display:none;">
-					<td colspan="6" style="background:#f9f9f9;padding:20px;">
+					<td colspan="7" style="background:#f9f9f9;padding:20px;">
 						<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
 							<div><strong>Name:</strong><br><?php echo esc_html($sub->name); ?></div>
 							<div><strong>Email:</strong><br><a href="mailto:<?php echo esc_attr($sub->email); ?>"><?php echo esc_html($sub->email); ?></a></div>
 							<div><strong>Phone:</strong><br><?php echo esc_html($sub->phone ?: '-'); ?></div>
 							<div><strong>Address:</strong><br><?php echo esc_html($sub->address ?: '-'); ?></div>
 							<div style="grid-column:1/-1;"><strong>Message:</strong><br><pre style="white-space:pre-wrap;margin:0;background:#fff;padding:10px;border:1px solid #ddd;"><?php echo esc_html($sub->message); ?></pre></div>
+
+							<?php
+							// Where the lead came from and how they got to the form. Hidden entirely
+							// for rows captured before attribution shipped, so old leads stay clean.
+							$sub_path     = lean_forms_meta_value($sub, 'visit_path', array());
+							$sub_campaign = lean_forms_meta_value($sub, 'utm_campaign');
+							$sub_landing  = lean_forms_meta_value($sub, 'landing_page');
+							$sub_click    = lean_forms_meta_value($sub, 'click_id');
+							$sub_source   = $sub->utm_source ?? '';
+							$sub_medium   = $sub->utm_medium ?? '';
+							?>
+							<?php if ($sub_source || $sub_medium || $sub_path): ?>
+							<div style="grid-column:1/-1;">
+								<strong>Attribution:</strong>
+								<div style="background:#fff;padding:10px;border:1px solid #ddd;">
+									<div><?php echo esc_html(lean_attribution_label($sub_source, $sub_medium)); ?>
+										<?php if ($sub_campaign !== ''): ?>
+										&mdash; campaign: <?php echo esc_html($sub_campaign); ?>
+										<?php endif; ?>
+										<?php if ($sub_click !== ''): ?>
+										<span style="color:#666;font-size:11px;">(click id: <?php echo esc_html($sub_click); ?>)</span>
+										<?php endif; ?>
+									</div>
+									<?php if ($sub_landing !== ''): ?>
+									<div style="color:#666;font-size:12px;">Landed on <?php echo esc_html($sub_landing); ?></div>
+									<?php endif; ?>
+
+									<?php if ($sub_path): ?>
+									<div style="margin-top:8px;"><strong style="font-size:12px;">Visit path</strong>
+										<span style="color:#666;font-size:12px;">(<?php echo esc_html(lean_attribution_path_summary($sub_path)); ?>)</span>
+										<pre style="white-space:pre-wrap;margin:4px 0 0;font-size:12px;"><?php echo esc_html(lean_attribution_format_path($sub_path)); ?></pre>
+									</div>
+									<?php endif; ?>
+								</div>
+							</div>
+							<?php endif; ?>
 						</div>
 						<div style="margin-top:15px;padding-top:15px;border-top:1px solid #ddd;color:#666;font-size:12px;">
 							<strong>ID:</strong> <?php echo $sub->id; ?> |
@@ -921,7 +1086,7 @@ function lean_forms_export_csv() {
 
 	if (!empty($search)) {
 		$like = '%' . $wpdb->esc_like($search) . '%';
-		$where .= $wpdb->prepare(" AND (name LIKE %s OR email LIKE %s OR message LIKE %s)", $like, $like, $like);
+		$where .= $wpdb->prepare(" AND (name LIKE %s OR email LIKE %s OR message LIKE %s OR utm_source LIKE %s)", $like, $like, $like, $like);
 	}
 
 	$submissions = $wpdb->get_results("SELECT * FROM {$table} {$where} ORDER BY created_at DESC");
@@ -930,9 +1095,13 @@ function lean_forms_export_csv() {
 	header('Content-Disposition: attachment; filename="form-submissions-' . date('Y-m-d') . '.csv"');
 
 	$output = fopen('php://output', 'w');
-	fputcsv($output, array('ID', 'Date', 'Name', 'Email', 'Phone', 'Address', 'Message', 'Page Slug', 'Page Title', 'IP', 'Spam'));
+	fputcsv($output, array('ID', 'Date', 'Name', 'Email', 'Phone', 'Address', 'Message', 'Page Slug', 'Page Title', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'Landing Page', 'Visit Path', 'IP', 'Spam'));
 
 	foreach ($submissions as $sub) {
+		// Path as "/ > /services/ > /contact/" — one cell, still readable in a spreadsheet.
+		$path = lean_forms_meta_value($sub, 'visit_path', array());
+		$path = $path ? implode(' > ', wp_list_pluck($path, 'u')) : '';
+
 		fputcsv($output, array(
 			$sub->id,
 			$sub->created_at,
@@ -943,6 +1112,11 @@ function lean_forms_export_csv() {
 			$sub->message,
 			$sub->page_slug,
 			$sub->page_title,
+			$sub->utm_source ?? '',
+			$sub->utm_medium ?? '',
+			lean_forms_meta_value($sub, 'utm_campaign'),
+			lean_forms_meta_value($sub, 'landing_page'),
+			$path,
 			$sub->ip_address,
 			$sub->is_spam ? 'Yes' : 'No'
 		));

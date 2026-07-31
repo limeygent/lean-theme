@@ -8,6 +8,48 @@ is the `Version:` header in `style.css`; `bin/check-version.sh` (run automatical
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-30
+### Added
+- **Lead attribution on the contact form.** Every submission now records where the visitor
+  came from and the pages they walked before submitting. Shown in the notification email, a
+  new **Source** column in the submissions list, the expanded detail row, and the CSV export.
+  New `inc/attribution.php`, loaded from `lean-loader.php` ahead of `inc/forms.php`.
+  - **Capture is client-side by necessity.** Two independent reasons: pages are served from a
+    full-page cache, so on a cache hit PHP never sees the visitor's query string; and visitors
+    almost never submit from the page they landed on, so the campaign parameters are long gone
+    by the time the AJAX POST fires. An inline `<head>` snippet stamps a first-party cookie
+    (`lean_attr`, 30 days, no personal data) that the form's submit handler reads back.
+  - **Untagged traffic is still labelled**, derived from `document.referrer`: search engines →
+    `google / organic`, AI assistants → `chatgpt / ai`, social → `facebook / social`, anything
+    else → `host / referral`, nothing → `direct / (none)`. Without this the column would be
+    empty for most real traffic.
+  - **Paid clicks survive missing UTMs**: `gclid` / `gbraid` / `wbraid` / `fbclid` / `msclkid`
+    infer the source and a `cpc` medium on their own.
+  - **Visit path** in `localStorage` (`lean_path`), not the cookie — it would otherwise ride
+    along on every request. Consecutive duplicates are skipped so a reload isn't a step, and
+    the trail is capped at 20, keeping the entry page plus the most recent steps.
+  - Leaving and coming back is kept, not discarded: a return through a new source is its own
+    step, labelled `came back via <source>`, with its own timestamp. Reusing the original
+    arrival time would report the time spent *off* the site as a dwell on the page they left.
+    The trail spans 24 hours, since comparison shopping across a session is exactly the story
+    a lead should tell.
+  - The snippet carries `data-cfasync="false" data-no-optimize="1" data-no-defer="1"`. An
+    optimizer that delays it until first interaction would miss the landing page and mislabel
+    the visit as direct.
+  - The cookie is only rewritten when the touch actually changes, so a site that carries UTM
+    parameters across internal links cannot overwrite the real landing page on every view.
+
+### Changed
+- **Submissions schema → 1.1**: new `utm_source` / `utm_medium` columns (indexed on
+  `utm_source`, which is also searchable from the admin list). Campaign, term, content, click
+  id, landing page, and visit path live in the existing `meta` JSON. Existing tables upgrade
+  through a targeted `ALTER` (`lean_forms_upgrade_schema()`) rather than a second `dbDelta()`
+  pass — the legacy columns are `text DEFAULT ''`, which MySQL rejects, so dbDelta would
+  attempt and silently fail that rewrite on every run. `LEAN_FORMS_DB_VERSION` now drives
+  create-vs-upgrade.
+- Submissions predating this release render clean: the email omits the source block entirely
+  and the list shows `—`.
+
 ## [1.2.0] - 2026-07-09
 ### Added
 - **Blog roll with meta descriptions and infinite scroll.** `home.php` renders a 4/3/1
@@ -76,4 +118,5 @@ is the `Version:` header in `style.css`; `bin/check-version.sh` (run automatical
 - Expanded the curated Bootstrap Icons subset (CSS selectors **and** the subsetted font
   files — adding an icon needs both, or it renders as a blank box).
 
+[1.3.0]: https://github.com/limeygent/lean-theme/releases/tag/v1.3.0
 [1.2.0]: https://github.com/limeygent/lean-theme/releases/tag/v1.2.0
