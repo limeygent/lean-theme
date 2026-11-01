@@ -121,6 +121,50 @@ function lean_fallback_head_seo() {
 }
 
 /**
+ * Is this request an Elementor-built page, or the Elementor editor's preview?
+ * Other pages never pay for Elementor's assets.
+ */
+function lean_is_elementor_page() {
+	if (!did_action('elementor/loaded') || !is_singular()) {
+		return false;
+	}
+	$elementor = \Elementor\Plugin::$instance;
+	if ($elementor->preview->is_preview_mode()) {
+		return true;
+	}
+	$document = $elementor->documents->get(get_queried_object_id());
+	return $document && $document->is_built_with_elementor();
+}
+
+/**
+ * Lean templates bypass wp_head()/wp_footer(), which is where Elementor loads its
+ * CSS and JS. On Elementor pages only, print the enqueued assets. wp_head() itself
+ * stays bypassed so title, meta and brand colours aren't printed twice.
+ * Priority 9 puts Elementor's CSS before Additional CSS (priority 10), so site CSS wins.
+ */
+add_action('lean_head', 'lean_print_elementor_head_assets', 9);
+function lean_print_elementor_head_assets() {
+	if (!lean_is_elementor_page()) {
+		return;
+	}
+	wp_enqueue_scripts();
+	// Core block styles aren't needed on an Elementor page.
+	wp_dequeue_style('wp-block-library');
+	wp_dequeue_style('wp-block-library-theme');
+	wp_dequeue_style('classic-theme-styles');
+	wp_dequeue_style('global-styles');
+	wp_print_styles();
+	wp_print_head_scripts();
+}
+
+add_action('lean_footer', 'lean_print_elementor_footer_assets');
+function lean_print_elementor_footer_assets() {
+	if (lean_is_elementor_page()) {
+		wp_footer();
+	}
+}
+
+/**
  * Output WP Customizer "Additional CSS" on lean pages via lean_head hook
  */
 add_action('lean_head', 'lean_output_customizer_css');

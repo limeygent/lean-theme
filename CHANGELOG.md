@@ -8,6 +8,14 @@ is the `Version:` header in `style.css`; `bin/check-version.sh` (run automatical
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-01
+### Added
+- **Elementor page support.** Lean templates bypass `wp_head()` and `wp_footer()`, which is
+  where Elementor loads its CSS and JS. On Elementor-built pages and the editor preview,
+  Lean now prints the enqueued assets on `lean_head` and calls `wp_footer()` on
+  `lean_footer`. `wp_head()` stays bypassed so title, meta and brand colours aren't printed
+  twice, and core block styles are dequeued on those pages. Other pages are unchanged.
+
 ## [1.4.0] - 2026-11-01
 ### Added
 - **`[testimonials text_only="1"]` and `max_chars="180"`.** Skip star-only reviews (the row
