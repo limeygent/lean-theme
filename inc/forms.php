@@ -154,6 +154,116 @@ function lean_forms_token_verify($token) {
 }
 
 /**
+ * The visitor's IP, as best we can tell.
+ *
+ * Behind Cloudflare, REMOTE_ADDR is an edge node — geolocating it would return the data
+ * centre rather than the visitor — so CF-Connecting-IP wins when it's there. Cloudflare
+ * strips any client-supplied copy of that header, so it's trustworthy on a CF site; on a
+ * non-CF site a spoofer can only pollute their own stored record. Deliberately NOT used
+ * for rate limiting, which stays on the unspoofable REMOTE_ADDR.
+ *
+ * @return string Validated IP, or '' if neither header holds one.
+ */
+function lean_forms_client_ip() {
+	$candidates = array(
+		$_SERVER['HTTP_CF_CONNECTING_IP'] ?? '',
+		$_SERVER['REMOTE_ADDR'] ?? '',
+	);
+
+	foreach ($candidates as $ip) {
+		$ip = trim($ip);
+		if (filter_var($ip, FILTER_VALIDATE_IP)) {
+			return $ip;
+		}
+	}
+
+	return '';
+}
+
+/**
+ * Resolve an IP to "City, Region, Country" so a submission's origin is readable at a glance.
+ *
+ * Best-effort by design: private/reserved addresses are skipped, results are cached per IP,
+ * and every failure path returns '' — a slow or dead geo service must never cost us a lead.
+ *
+ * @param string $ip IPv4/IPv6 address.
+ * @return string Formatted location, or '' when unavailable.
+ */
+function lean_forms_geolocate_ip($ip) {
+	// Filterable so a site can swap providers (the value must contain a %s for the IP), or
+	// pass '' to turn geolocation off entirely and stop visitor IPs leaving the server.
+	$endpoint = apply_filters('lean_forms_geo_endpoint', 'https://ipwho.is/%s');
+
+	if ($ip === '' || $endpoint === '') {
+		return '';
+	}
+
+	// Localhost, LAN and reserved ranges have no location — don't spend a call on them.
+	if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+		return '';
+	}
+
+	// A stored '' is a real cached answer, distinct from get_transient()'s false-for-missing.
+	$cache_key = 'lean_geo_' . md5($ip);
+	$cached = get_transient($cache_key);
+	if ($cached !== false) {
+		return $cached;
+	}
+
+	$response = wp_remote_get(sprintf($endpoint, rawurlencode($ip)), array(
+		'timeout' => 2,
+		'headers' => array('Accept' => 'application/json'),
+	));
+
+	$location = '';
+	if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+		$data = json_decode(wp_remote_retrieve_body($response), true);
+		if (is_array($data)) {
+			$location = lean_forms_format_location($data);
+		}
+	}
+
+	// Successes are worth keeping (IPs rarely move); failures get a short negative cache so a
+	// blip doesn't blank out that visitor for a week.
+	set_transient($cache_key, $location, $location !== '' ? WEEK_IN_SECONDS : HOUR_IN_SECONDS);
+
+	return $location;
+}
+
+/**
+ * Flatten a geo API's JSON into "City, Region, Country".
+ *
+ * Key aliases are what keep lean_forms_geo_endpoint genuinely swappable: ipwho.is returns
+ * city/region/country, other keyless providers return cityName/regionName/countryName.
+ *
+ * @param array $data Decoded JSON response.
+ * @return string
+ */
+function lean_forms_format_location($data) {
+	// ipwho.is answers 200 with success=false for an unroutable or unknown address.
+	if (isset($data['success']) && !$data['success']) {
+		return '';
+	}
+
+	$pick = function($keys) use ($data) {
+		foreach ($keys as $key) {
+			if (!empty($data[$key]) && is_string($data[$key])) {
+				return sanitize_text_field($data[$key]);
+			}
+		}
+		return '';
+	};
+
+	$parts = array(
+		$pick(array('city', 'cityName')),
+		$pick(array('region', 'regionName')),
+		$pick(array('country', 'countryName')),
+	);
+
+	return implode(', ', array_filter($parts));
+}
+
+/**
  * Security: Rate limiting
  */
 function lean_forms_rate_limit_check() {
@@ -223,6 +333,11 @@ function lean_forms_process_submission() {
 	$attribution = lean_attribution_from_post();
 	$visit_path  = lean_attribution_path_from_post();
 
+	// Resolve the IP to a place while we still have the request. Unlike UTMs this one is safe
+	// server-side: the AJAX POST is never page-cached, so REMOTE_ADDR really is the submitter.
+	$ip_address  = lean_forms_client_ip();
+	$ip_location = lean_forms_geolocate_ip($ip_address);
+
 	// Save to database - page_slug is the unique identifier
 	$submission_id = lean_forms_save_submission(array(
 		'name'       => $name,
@@ -236,7 +351,7 @@ function lean_forms_process_submission() {
 		'referrer'   => $_SERVER['HTTP_REFERER'] ?? '',
 		'utm_source' => $attribution['source'],
 		'utm_medium' => $attribution['medium'],
-		'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
+		'ip_address' => $ip_address,
 		'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
 		'meta'       => array_filter(array(
 			'utm_campaign' => $attribution['campaign'],
@@ -245,6 +360,7 @@ function lean_forms_process_submission() {
 			'click_id'     => $attribution['click_id'],
 			'landing_page' => $attribution['landing_page'],
 			'visit_path'   => $visit_path,
+			'ip_location'  => $ip_location,
 		)),
 	));
 
@@ -376,7 +492,12 @@ function lean_forms_send_notification($submission_id, $config) {
 	}
 
 	$body .= "\nSubmitted: {$submission->created_at}\n";
-	$body .= "IP: {$submission->ip_address}\n";
+
+	// IP with its resolved location — a lead from nowhere near the service area is the
+	// cheapest spam tell there is. Appended only when the lookup actually returned something.
+	$ip_location = lean_forms_meta_value($submission, 'ip_location');
+	$body .= "IP: {$submission->ip_address}";
+	$body .= $ip_location !== '' ? " ({$ip_location})\n" : "\n";
 	$body .= "\nView in admin: " . admin_url('admin.php?page=lean-form-submissions&view=' . $submission_id);
 
 	$headers = array(
@@ -643,13 +764,25 @@ function lean_forms_shortcode($atts = array()) {
 						msg.innerHTML = '<strong>Thank You!</strong><br>' + (result.data || '');
 					}, 300);
 
-					// Track conversion
-					if (typeof gtag !== 'undefined') {
+					// Track only a server-confirmed successful submission.
+					window.dataLayer = window.dataLayer || [];
+					window.dataLayer.push({
+						event: 'lead_form_success',
+						form_id: (form.dataset.pageSlug || 'unknown') + '-contact',
+						form_name: (form.dataset.pageTitle || 'Contact') + ' contact form',
+						lead_type: 'form'
+					});
+
+					// GA4-only sites: gtag.js ignores the plain push above, so send the event
+					// directly. The theme only defines gtag when no GTM ID is set, so a GTM
+					// site never reaches this and can't double-count.
+					if (typeof gtag === 'function') {
 						gtag('event', 'generate_lead', {
 							'event_category': 'contact',
 							'event_label': form.dataset.pageSlug
 						});
 					}
+
 				} else {
 					msg.textContent = result.data || 'An error occurred';
 					btn.disabled = false;
@@ -998,7 +1131,13 @@ function lean_forms_admin_page() {
 						<div style="margin-top:15px;padding-top:15px;border-top:1px solid #ddd;color:#666;font-size:12px;">
 							<strong>ID:</strong> <?php echo $sub->id; ?> |
 							<strong>Page:</strong> <?php echo esc_html($sub->page_title ?: $sub->page_slug); ?> (<?php echo esc_html($sub->page_slug); ?>) |
-							<strong>IP:</strong> <?php echo esc_html($sub->ip_address); ?> |
+							<strong>IP:</strong> <?php
+								echo esc_html($sub->ip_address);
+								$sub_location = lean_forms_meta_value($sub, 'ip_location');
+								if ($sub_location !== '') {
+									echo ' (' . esc_html($sub_location) . ')';
+								}
+							?> |
 							<strong>Submitted:</strong> <?php echo $sub->created_at; ?>
 						</div>
 					</td>
@@ -1095,7 +1234,7 @@ function lean_forms_export_csv() {
 	header('Content-Disposition: attachment; filename="form-submissions-' . date('Y-m-d') . '.csv"');
 
 	$output = fopen('php://output', 'w');
-	fputcsv($output, array('ID', 'Date', 'Name', 'Email', 'Phone', 'Address', 'Message', 'Page Slug', 'Page Title', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'Landing Page', 'Visit Path', 'IP', 'Spam'));
+	fputcsv($output, array('ID', 'Date', 'Name', 'Email', 'Phone', 'Address', 'Message', 'Page Slug', 'Page Title', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'Landing Page', 'Visit Path', 'IP', 'IP Location', 'Spam'));
 
 	foreach ($submissions as $sub) {
 		// Path as "/ > /services/ > /contact/" — one cell, still readable in a spreadsheet.
@@ -1118,6 +1257,7 @@ function lean_forms_export_csv() {
 			lean_forms_meta_value($sub, 'landing_page'),
 			$path,
 			$sub->ip_address,
+			lean_forms_meta_value($sub, 'ip_location'),
 			$sub->is_spam ? 'Yes' : 'No'
 		));
 	}

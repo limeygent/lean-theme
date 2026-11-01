@@ -25,7 +25,7 @@ A lightweight WordPress theme/module with built-in SEO functionality, Bootstrap 
 - `/inc/` - PHP includes (SEO, settings, shortcodes, forms, lead attribution)
 - `/css/` - Stylesheets (Bootstrap, custom styles)
 - `/template-parts/` - Theme template partials
-- `/code-snippets/` - Standalone code snippets for SEO functionality
+- `/code-snippets/` - Custom snippets for NON-Lean sites, pasted by hand; never loaded by the theme (retired SEO snippets are in `/_archive/code-snippets/`)
 - `/assets/` - Fonts and other assets
 
 ## Future Feature: ADA / WCAG Contrast Auditor

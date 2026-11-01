@@ -2,8 +2,9 @@
 /**
  * Single Post Template
  *
- * Full-bleed featured-image hero with the post title overlaid, followed by
- * the article body in a standard Bootstrap container.
+ * Full-bleed featured-image hero, followed by the article body in a standard
+ * Bootstrap container. The post title is the <h1> in the body, directly under
+ * the review notice — not overlaid on the hero.
  */
 
 get_header();
@@ -17,17 +18,6 @@ while ( have_posts() ) : the_post();
 				'loading'  => 'eager',
 				'decoding' => 'sync',
 			]); ?>
-			<div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-75 py-4 py-md-5">
-				<div class="container">
-					<p class="fs-1 fw-bold text-white mb-0"><?php the_title(); ?></p>
-				</div>
-			</div>
-		</section>
-	<?php else : ?>
-		<section class="blog-hero bg-dark py-5">
-			<div class="container">
-				<p class="fs-1 fw-bold text-white mb-0"><?php the_title(); ?></p>
-			</div>
 		</section>
 	<?php endif; ?>
 
@@ -35,6 +25,7 @@ while ( have_posts() ) : the_post();
 		<section class="lean-section">
 			<article>
 				<?php echo do_shortcode('[blog_review_notice]'); ?>
+				<h1 class="mb-4"><?php the_title(); ?></h1>
 				<?php the_content(); ?>
 				<?php echo do_shortcode('[blog_post_interlink]'); ?>
 			</article>

@@ -8,6 +8,42 @@ is the `Version:` header in `style.css`; `bin/check-version.sh` (run automatical
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-01
+### Added
+- **`[testimonials text_only="1"]` and `max_chars="180"`.** Skip star-only reviews (the row
+  still fills), and trim long quotes to a whole word plus an ellipsis. The full text still
+  goes out as the schema `reviewBody`.
+- **`[gbp_review_count]` and `[gbp_review_average]`.** Read from the draft `gbp-stats`
+  testimonial the agency dashboard writes; both print nothing if that post doesn't exist.
+- **IP location on form submissions.** Resolved through ipwho.is and shown in the
+  notification email, the submission detail row and the CSV export (new **IP Location**
+  column). Failures never block a lead, and the lookup waits 2 seconds at most. Visitor IPs
+  leave the server for this: return `''` from the `lean_forms_geo_endpoint` filter to turn it
+  off, or return another URL to swap provider.
+- **`[testimonials location="…"]`.** Filters the row to reviews left for one business
+  location, on the `review_location` meta the agency dashboard writes (registered by
+  NerdPress SEO). Comma-separate for several; combines with `category`. The filter covers
+  the whole row, so a location page that runs short tops up from the same location's
+  fallback pool, never another branch's. Testimonials with no location recorded match no
+  location filter.
+- **`code-snippets/custom-reviews-non-lean-sites.php`.** Standalone port of the review
+  system for sites on other themes: custom use only, not loaded by the theme, and it
+  disables itself if Lean is detected.
+
+### Changed
+- **Form lead tracking.** GTM sites now get a `lead_form_success` dataLayer event, which needs
+  a trigger in each container. GA4-only sites keep `generate_lead`.
+- **Testimonial top-ups are exclusive by default.** A fallback review must carry no category
+  outside the fallback and primary sets; `fallback_exclusive="0"` restores the old behaviour.
+- **Testimonial cards redesigned.** Now a Bootstrap row of `.review-card` columns with stars,
+  quote, name, source and date, replacing `.items-grid` / `.items-card`. Star colour is
+  `#a85a00`, which passes 3:1 on white.
+- **Stored form IP prefers `CF-Connecting-IP`,** so Cloudflare sites record the visitor rather
+  than an edge node. Rate limiting stays on `REMOTE_ADDR`.
+- **Single posts: the title is now a real `<h1>` in the article body,** below the review
+  notice, and no longer overlaid on the hero. Posts with no featured image have no hero, and
+  any post with its own H1 in the content will now show two.
+
 ## [1.3.0] - 2026-07-30
 ### Added
 - **Lead attribution on the contact form.** Every submission now records where the visitor

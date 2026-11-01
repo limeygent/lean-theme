@@ -584,8 +584,9 @@ body {
 
 /* ============================================================================
    BLOG POST HERO
-   Full-width featured image with title overlay on single posts. <main> is
-   no longer constrained, so no breakout math is needed.
+   Full-width featured image on single posts. <main> is no longer constrained,
+   so no breakout math is needed. The post title is NOT overlaid here — it is
+   the <h1> in the article body, below the review notice (see single.php).
    ============================================================================ */
 
 .blog-hero {
@@ -603,22 +604,6 @@ body {
 	   is the real image ratio, so this does NOT crop (matches height:auto exactly). */
 	aspect-ratio: 800 / 446;
 }
-/* The branded image already shows the title (top banner) and logo (bottom strip),
-   so the theme's visual title overlay would cover them. Make it screen-reader-only:
-   the title text stays in the DOM for SEO/accessibility, but the visual bar is hidden.
-   Posts WITHOUT a featured image still show their title via the .blog-hero.bg-dark branch. */
-.blog-hero > .position-absolute {
-	position: absolute !important;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	white-space: nowrap;
-	border: 0;
-}
-
 /* ============================================================================
    STICKY HEADER
    Applied when "Sticky Header" is enabled in Appearance settings.
@@ -840,7 +825,7 @@ body {
 
 /* REVIEW CARD — testimonial */
 .review-card { background: #fff; border-radius: 12px; padding: 1.5rem; height: 100%; box-shadow: 0 2px 10px rgba(0,0,0,.06); border: 1px solid rgba(var(--brand-rgb), .1); }
-.review-card .stars { color: #ffa41c; font-size: 1.05rem; letter-spacing: .12em; margin-bottom: .75rem; }
+.review-card .stars { color: #a85a00; font-size: 1.05rem; letter-spacing: .12em; margin-bottom: .75rem; }
 .review-card .quote { color: #333; line-height: 1.6; font-size: .98rem; margin-bottom: 1rem; }
 .review-card .reviewer { font-weight: 700; color: var(--brand); font-size: .92rem; }
 .review-card .city { font-weight: 500; color: #777; font-size: .85rem; }

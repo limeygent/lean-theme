@@ -590,6 +590,8 @@ function lean_theme_shortcodes_reference() {
 					<tr><td><code>[google_kgid]</code></td><td>Knowledge Graph ID</td></tr>
 					<tr><td><code>[google_gmb_image_url]</code></td><td>GMB Image URL</td></tr>
 					<tr><td><code>[map_embed]</code></td><td>Google Map with GMB overlay</td></tr>
+					<tr><td><code>[gbp_review_count]</code></td><td>Total Google reviews, star-only included (e.g. <em>153</em>). Read from the dashboard's draft <em>gbp-stats</em> testimonial; blank if that post doesn't exist</td></tr>
+					<tr><td><code>[gbp_review_average]</code></td><td>Average star rating, one decimal (e.g. <em>5.0</em>)</td></tr>
 				</tbody>
 			</table>
 
@@ -602,7 +604,10 @@ function lean_theme_shortcodes_reference() {
 					<tr><td><code>[testimonials category="maintenance"]</code></td><td>Only the <em>maintenance</em> testimonial category (slug); comma-separate for several, e.g. <code>category="hvac,plumbing"</code></td></tr>
 					<tr><td><code>[testimonials category="maintenance" num_reviews="6"]</code></td><td>If the category has fewer than <code>num_reviews</code>, top up the rest at random from the <em>generic</em> category</td></tr>
 					<tr><td><code>[testimonials category="maintenance" fallback="reviews"]</code></td><td>Use a custom top-up category instead of <em>generic</em>; <code>fallback=""</code> disables top-up</td></tr>
-					<tr><td><code>[latest_blog_post]</code></td><td>Link to latest post</td></tr>
+					<tr><td><code>[testimonials category="heating" fallback="brand"]</code></td><td>Top-ups are <strong>exclusive</strong> by default: only reviews tagged <em>brand</em> and <strong>nothing else</strong> fill the gap, so a <em>brand&nbsp;+&nbsp;ac-repair</em> review never lands on a heating page. Set <code>fallback_exclusive="0"</code> to accept any review carrying the fallback term</td></tr>
+					<tr><td><code>[testimonials location="south-dallas"]</code></td><td>Only reviews left for that business location (the <em>review_location</em> slug the dashboard writes). Combines with <code>category</code>; top-ups stay within the location too</td></tr>
+					<tr><td><code>[testimonials text_only="1"]</code></td><td>Only reviews that have written text &mdash; star-only reviews are skipped and replaced, so the row still fills</td></tr>
+					<tr><td><code>[testimonials max_chars="180"]</code></td><td>Trim quotes longer than 180 characters to a whole word plus &hellip; (keeps card heights even; the full review still goes in the schema)</td></tr>					<tr><td><code>[latest_blog_post]</code></td><td>Link to latest post</td></tr>
 				</tbody>
 			</table>
 		</td>

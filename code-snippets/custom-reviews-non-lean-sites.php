@@ -13,16 +13,20 @@
  * INSTALL
  *   Code Snippets plugin: paste as a PHP snippet, "Run everywhere", without the
  *   opening <?php tag. Or save as wp-content/mu-plugins/custom-reviews.php.
- *   Then fill in nlr_business() below (used for the review schema).
+ *   Then fill in nlr_business() below (used for the review schema), and check
+ *   nlr_site_terms(): it holds ONE CLIENT'S terms and creates them on this site.
  *
  * WHAT IT ADDS
- *   - `testimonials` post type (admin only, no front-end URLs)
- *   - `testimonial_category` taxonomy
+ *   - `testimonials` post type, used as an internal database: no URLs, no archive,
+ *     not in search or sitemaps, and its REST routes need a logged-in editor
+ *   - `testimonial_category` taxonomy (the service)
+ *   - `review_attribute` taxonomy (situation, what staff did, manner, outcome).
+ *     This one exists only in this snippet, not in Lean or NerdPress yet.
  *   - Review Link, Rating and Location fields on the testimonial editor
  *   - The shortcodes below, with their own CSS (no Bootstrap needed)
  *   Post type, taxonomy and meta keys match Lean/NerdPress, so the agency
  *   dashboard's push (agency-dashboard/docs/testimonials-push.md) works
- *   unchanged. Its category terms must still be created by hand.
+ *   unchanged. Terms in nlr_site_terms() are created once, on first load.
  *
  * SHORTCODES
  *   [testimonials num_reviews="6"]
@@ -32,6 +36,12 @@
  *   [testimonials category="hvac" fallback_exclusive="0"]  allow top-ups that
  *                                                also carry other categories
  *   [testimonials location="oak-cliff"]       one location, top-ups included
+ *   [testimonials attribute="expedited,first-time"]   any of these attributes
+ *   [testimonials attribute="expedited,first-time" match="all"]  all of them
+ *                                                An attribute row never tops up:
+ *                                                a brand review would not back up
+ *                                                the claim. A short row stays short,
+ *                                                and an empty one prints nothing.
  *   [testimonials text_only="1"]                 skip star-only reviews
  *   [testimonials max_chars="180"]               shorten long quotes on the card
  *   [gbp_review_count]    → 153   total from the dashboard's `gbp-stats` post
@@ -69,6 +79,58 @@ function nlr_business() {
 	);
 }
 
+/**
+ * EDIT PER SITE: the terms to create. Currently SOUTHERN BAIL BONDS.
+ *
+ * THIS IS THE ONLY LIST. The agency dashboard reads these terms from the site and
+ * files reviews by them, so a change here changes how reviews get tagged.
+ *
+ * After changing this list, raise NLR_TERMS_VERSION. That adds missing terms and
+ * overwrites the DESCRIPTIONS of the listed attributes with the tests below. It
+ * never renames, moves or deletes a term.
+ */
+define('NLR_TERMS_VERSION', '3');
+
+function nlr_site_terms() {
+	return array(
+		'testimonial_category' => array(
+			'brand' => 'Brand',
+		),
+		// axis slug => array(axis name, array(value slug => array(name, test)))
+		// The test goes in the term's description, and the dashboard reads it as
+		// the question it asks about each review.
+		'review_attribute' => array(
+			'situations' => array('Situations', array(
+				'first-time' => array('First time', 'The reviewer, or the person they helped, had never posted a bond or been through this before. Phrases like \'my first time\' or \'someone who has never done this\' count.'),
+				'for-family-member' => array('For family', 'The reviewer was acting for someone else in jail: a son, daughter, spouse, parent, sibling, partner, friend or other loved one. \'Bailing someone out\' counts.'),
+				'for-self' => array('For self', 'The reviewer is the person who was arrested and bailed out, and the review shows it, such as \'I was out\' or \'my bond\'. If it mentions a relative or friend in jail, or does not make this clear, the answer is no.'),
+				'remote-caller' => array('Remote caller', 'The reviewer says they handled it from home, or from another city or state, without coming in.'),
+				'after-hours' => array('After hours', 'The arrest or the help happened at night, on a weekend, or on a holiday. A holiday or night event counts even if 24/7 is never said.'),
+				'others-said-no' => array('Others said no', 'The review mentions a different bail company by saying that company turned the reviewer away, said no, charged them without helping, or gave them the runaround first. Merely praising Southern Bail Bonds or recommending it over others is no.'),
+				'money-tight' => array('Money tight', 'The reviewer states money was tight, they could not afford the full amount, or they were worried about the cost.'),
+				'distressed' => array('Distressed', 'The reviewer states they were stressed, scared, nervous, emotional, or in a hard or difficult time, or says this about the situation.'),
+			)),
+			'actions' => array('Actions', array(
+				'explained' => array('Explained', 'Staff explained the process, steps, costs, fees or paperwork, or guided the reviewer through it.'),
+				'kept-informed' => array('Kept informed', 'Staff gave updates during the wait: callbacks, check-ins, status calls, or communicating often.'),
+				'answered-promptly' => array('Answered promptly', 'Staff answered the phone or responded right away, or called back quickly.'),
+				'remote-process' => array('Online / phone', 'The bond was handled by phone, online, or remote paperwork. Any mention of doing it over the phone, by email or online counts.'),
+				'found-a-way' => array('Found a way', 'Staff solved a hard case, worked with an unusual situation, or went above and beyond, including helping outside normal hours.'),
+				'expedited' => array('Fast', 'The process, the staff member\'s work or the release was fast. Any speed word counts: fast, quick, moved quickly, prompt, same day, within an hour, no waiting.'),
+			)),
+			'manner' => array('Manner', array(
+				'kind-patient' => array('Kind / patient', 'Staff were kind, patient, friendly, caring, understanding, or helpful in tone.'),
+				'professional' => array('Professional / respectful', 'Staff were professional, knowledgeable, efficient, respectful, polite, courteous or non-judgmental, knew the process, or treated the reviewer with dignity.'),
+			)),
+			'outcomes' => array('Outcomes', array(
+				'home' => array('Got home', 'The person got out of jail or came home.'),
+				'stress-relieved' => array('Stress relieved', 'The reviewer felt calmer, relieved or at ease, or describes the process as easy, smooth or painless.'),
+				'recommend' => array('Recommends', 'The reviewer explicitly recommends the business, would refer others, or would use them again.'),
+			)),
+		),
+	);
+}
+
 // Waits for after_setup_theme because plugins and snippets load BEFORE the theme:
 // LEAN_THEME_DIR isn't defined yet when this file runs.
 add_action('after_setup_theme', 'nlr_bootstrap', 0);
@@ -82,6 +144,14 @@ function nlr_bootstrap() {
 	// Late enough to see a type registered by the theme or by NerdPress SEO, and
 	// to replace a theme's own [testimonials].
 	add_action('init', 'nlr_register_content', 20);
+	add_action('init', 'nlr_seed_terms', 21);
+	// Filters, so the rules also hold for a type or taxonomy registered elsewhere.
+	add_filter('register_post_type_args', 'nlr_private_post_type_args', 20, 2);
+	add_filter('register_taxonomy_args', 'nlr_private_taxonomy_args', 20, 2);
+	add_filter('rest_pre_dispatch', 'nlr_guard_rest', 10, 3);
+	add_filter('wpseo_sitemap_exclude_post_type', 'nlr_yoast_exclude_type', 10, 2);
+	add_filter('wpseo_sitemap_exclude_taxonomy', 'nlr_yoast_exclude_taxonomy', 10, 2);
+	add_filter('wp_robots', 'nlr_noindex');
 	add_action('init', 'nlr_register_shortcodes', 20);
 	add_action('wp_head', 'nlr_print_styles', 20);
 	add_action('admin_notices', 'nlr_usage_notice');
@@ -104,6 +174,78 @@ function nlr_usage_notice() {
 	if ($screen && 'testimonials' === $screen->post_type) {
 		echo '<div class="notice notice-info"><p><strong>Testimonials Shortcode:</strong> Use <code>[testimonials num_reviews="6"]</code> to display testimonials, <code>[testimonials category="slug"]</code> to show only one category, or <code>[testimonials location="slug"]</code> to show only one location.</p></div>';
 	}
+}
+
+/* ---- Keeping it private -------------------------------------------------- */
+
+function nlr_private_post_type_args($args, $post_type) {
+	if ('testimonials' !== $post_type) {
+		return $args;
+	}
+
+	return array_merge($args, array(
+		'public'              => false,
+		'publicly_queryable'  => false,
+		'exclude_from_search' => true,
+		'has_archive'         => false,
+		'rewrite'             => false,
+		'query_var'           => false,
+		'show_in_nav_menus'   => false,
+		'show_ui'             => true,
+		'show_in_rest'        => true, // the dashboard writes through REST; nlr_guard_rest locks it
+	));
+}
+
+function nlr_private_taxonomy_args($args, $taxonomy) {
+	if (!in_array($taxonomy, array('testimonial_category', 'review_attribute'), true)) {
+		return $args;
+	}
+
+	return array_merge($args, array(
+		'public'             => false,
+		'publicly_queryable' => false,
+		'rewrite'            => false,
+		'query_var'          => false,
+		'show_in_nav_menus'  => false,
+		'show_tagcloud'      => false,
+		'show_ui'            => true,
+		'show_in_rest'       => true,
+	));
+}
+
+/**
+ * REST routes are readable by anyone by default, even on a non-public type, which
+ * would publish the whole review table as JSON. Shortcodes don't use REST, so
+ * pages are unaffected.
+ */
+function nlr_guard_rest($result, $server, $request) {
+	if (null !== $result) {
+		return $result;
+	}
+	if (preg_match('#^/wp/v2/(testimonials|testimonial_category|review_attribute)(/|$)#', $request->get_route())
+		&& !current_user_can('edit_posts')) {
+		return new WP_Error('nlr_private', 'Not available.', array('status' => 401));
+	}
+
+	return $result;
+}
+
+function nlr_yoast_exclude_type($excluded, $post_type) {
+	return 'testimonials' === $post_type ? true : $excluded;
+}
+
+function nlr_yoast_exclude_taxonomy($excluded, $taxonomy) {
+	return in_array($taxonomy, array('testimonial_category', 'review_attribute'), true) ? true : $excluded;
+}
+
+/** Backstop only: with no URLs, nothing should ever reach this. */
+function nlr_noindex($robots) {
+	if (is_singular('testimonials')) {
+		$robots['noindex']  = true;
+		$robots['nofollow'] = true;
+	}
+
+	return $robots;
 }
 
 /* ---- Post type, taxonomy, meta ------------------------------------------ */
@@ -156,6 +298,33 @@ function nlr_register_content() {
 		));
 	}
 
+	// Separate from testimonial_category on purpose: the top-up pool only takes
+	// reviews with no other category, and nearly every review has attributes.
+	if (!taxonomy_exists('review_attribute')) {
+		register_taxonomy('review_attribute', array('testimonials'), array(
+			'labels'            => array(
+				'name'          => 'Review Attributes',
+				'singular_name' => 'Review Attribute',
+				'menu_name'     => 'Attributes',
+				'all_items'     => 'All Attributes',
+				'edit_item'     => 'Edit Attribute',
+				'update_item'   => 'Update Attribute',
+				'add_new_item'  => 'Add New Attribute',
+				'new_item_name' => 'New Attribute Name',
+				'parent_item'   => 'Parent Attribute',
+				'search_items'  => 'Search Attributes',
+				'not_found'     => 'No attributes found',
+			),
+			'public'            => false,
+			'show_ui'           => true,
+			'show_in_menu'      => true,
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'hierarchical'      => true,
+			'rewrite'           => false,
+		));
+	}
+
 	if (function_exists('nerdpress_register_testimonial_meta')) {
 		return; // NerdPress SEO already registered the same keys.
 	}
@@ -187,6 +356,61 @@ function nlr_register_content() {
 		'sanitize_callback' => 'sanitize_title',
 		'auth_callback'     => $can_edit,
 	));
+}
+
+/** Create what nlr_site_terms() lists. Marked done only if everything succeeded. */
+function nlr_seed_terms() {
+	if (NLR_TERMS_VERSION === get_option('nlr_terms_version')) {
+		return;
+	}
+
+	$ok    = true;
+	$terms = nlr_site_terms();
+
+	foreach ($terms['testimonial_category'] as $slug => $name) {
+		$ok = (null !== nlr_ensure_term('testimonial_category', $slug, $name, 0)) && $ok;
+	}
+	foreach ($terms['review_attribute'] as $parent_slug => $group) {
+		$parent_id = nlr_ensure_term('review_attribute', $parent_slug, $group[0], 0);
+		if (null === $parent_id) {
+			$ok = false;
+			continue;
+		}
+		foreach ($group[1] as $slug => $term) {
+			$ok = (null !== nlr_ensure_term('review_attribute', $slug, $term[0], $parent_id, $term[1])) && $ok;
+		}
+	}
+
+	if ($ok) {
+		update_option('nlr_terms_version', NLR_TERMS_VERSION);
+	}
+}
+
+/**
+ * The term's id, creating it if no term has this slug. Null if that failed. An
+ * existing term only ever has its description brought into line, and only when a
+ * description is given.
+ */
+function nlr_ensure_term($taxonomy, $slug, $name, $parent_id, $description = null) {
+	$existing = get_term_by('slug', $slug, $taxonomy);
+	if ($existing) {
+		if (null !== $description && $existing->description !== $description) {
+			$updated = wp_update_term($existing->term_id, $taxonomy, array('description' => $description));
+			if (is_wp_error($updated)) {
+				return null;
+			}
+		}
+
+		return (int) $existing->term_id;
+	}
+
+	$created = wp_insert_term($name, $taxonomy, array(
+		'slug'        => $slug,
+		'parent'      => $parent_id,
+		'description' => null === $description ? '' : $description,
+	));
+
+	return is_wp_error($created) ? null : (int) $created['term_id'];
 }
 
 function nlr_add_meta_box() {
@@ -299,6 +523,8 @@ function nlr_testimonials_shortcode($atts) {
 		'fallback'           => 'brand',
 		'fallback_exclusive' => true,
 		'location'           => '',
+		'attribute'          => '',
+		'match'              => 'any',
 		'text_only'          => false,
 		'max_chars'          => 0,
 	), $atts, 'testimonials');
@@ -326,26 +552,44 @@ function nlr_testimonials_shortcode($atts) {
 		)),
 	);
 
+	$attribute_slugs  = array_values(array_filter(array_map('sanitize_title', explode(',', $atts['attribute']))));
+	$attribute_clause = empty($attribute_slugs) ? null : array(
+		'taxonomy'         => 'review_attribute',
+		'field'            => 'slug',
+		'terms'            => $attribute_slugs,
+		'operator'         => 'all' === strtolower(trim($atts['match'])) ? 'AND' : 'IN',
+		'include_children' => false,
+	);
+
 	if (empty($primary_slugs)) {
-		$ids = nlr_collect_ids(array_merge(array(
+		$args = array(
 			'orderby' => 'date',
 			'order'   => 'DESC',
-		), $location_args), $num_reviews, $text_only);
+		);
+		if ($attribute_clause) {
+			$args['tax_query'] = array($attribute_clause);
+		}
+		$ids = nlr_collect_ids(array_merge($args, $location_args), $num_reviews, $text_only);
 	} else {
 		// Primary category, newest first.
+		$primary_query = array(array(
+			'taxonomy' => 'testimonial_category',
+			'field'    => 'slug',
+			'terms'    => $primary_slugs,
+		));
+		if ($attribute_clause) {
+			$primary_query['relation'] = 'AND';
+			$primary_query[] = $attribute_clause;
+		}
 		$ids = nlr_collect_ids(array_merge(array(
 			'orderby'   => 'date',
 			'order'     => 'DESC',
-			'tax_query' => array(array(
-				'taxonomy' => 'testimonial_category',
-				'field'    => 'slug',
-				'terms'    => $primary_slugs,
-			)),
+			'tax_query' => $primary_query,
 		), $location_args), $num_reviews, $text_only);
 
 		// If short, top up at random from the fallback category.
 		$needed = $num_reviews - count($ids);
-		if ($needed > 0 && !empty($fallback_slugs)) {
+		if ($needed > 0 && !empty($fallback_slugs) && !$attribute_clause) {
 			$tax_query = array(array(
 				'taxonomy' => 'testimonial_category',
 				'field'    => 'slug',
@@ -374,7 +618,7 @@ function nlr_testimonials_shortcode($atts) {
 	}
 
 	if (empty($ids)) {
-		return '<p>No testimonials found.</p>';
+		return $attribute_clause ? '' : '<p>No testimonials found.</p>';
 	}
 
 	$query = new WP_Query(array(
@@ -613,7 +857,8 @@ function nlr_truncate($text, $max_chars) {
 		$cut = substr($cut, 0, $space);
 	}
 
-	return rtrim($cut, " \t\n\r\0\x0B.,;:!?-–—\"'");
+	// Regex, not rtrim(): rtrim() strips bytes, which corrupts multibyte characters.
+	return (string) preg_replace('/[\s.,;:!?\-–—"\']+$/u', '', $cut);
 }
 
 /** "Google Review" etc., from the review link. '' when there is no link. */
