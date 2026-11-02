@@ -8,6 +8,12 @@ is the `Version:` header in `style.css`; `bin/check-version.sh` (run automatical
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-11-01
+### Fixed
+- **Review notice no longer sits beside the post title.** `[blog_review_notice]` was
+  `inline-block`, so a title styled `inline-block` flowed up next to it. Now `display: table`,
+  which keeps the box shrink-wrapped but always on its own line.
+
 ## [1.5.0] - 2026-11-01
 ### Added
 - **Elementor page support.** Lean templates bypass `wp_head()` and `wp_footer()`, which is

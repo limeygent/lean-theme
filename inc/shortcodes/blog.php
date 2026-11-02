@@ -66,7 +66,7 @@ function lean_blog_review_notice_shortcode() {
 		$review_date = $this_month;
 	}
 
-	$output = '<div style="display: inline-block; background-color: rgb(0, 83, 149, 0.3); padding: 10px; border: 1px solid #005395; margin-top: 0px; margin-bottom: 10px; font-size: 0.8em;">';
+	$output = '<div style="display: table; background-color: rgb(0, 83, 149, 0.3); padding: 10px; border: 1px solid #005395; margin-top: 0px; margin-bottom: 10px; font-size: 0.8em;">';
 	$output .= 'This article was written & reviewed by the ' . esc_html($business_name) . ' staff. ';
 	if ($review_date >= $publish_date) {
 		$formatted_date = $review_date->format('F j, Y');
